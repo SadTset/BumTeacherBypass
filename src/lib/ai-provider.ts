@@ -76,7 +76,8 @@ function extractJSON(text: string): unknown {
       if (depth === 0) {
         try {
           return JSON.parse(trimmed.substring(startIdx, i + 1));
-        } catch {
+        } catch (e) {
+          console.error('extractJSON: found braces but JSON.parse failed, first 500 chars:', trimmed.substring(startIdx, startIdx + 500));
           break;
         }
       }
@@ -111,222 +112,90 @@ export class AIProvider {
   }
 
   private buildSystemPrompt(): string {
-    return `You are an educational worksheet generator. Your job is to take raw text from a PDF/document and convert it into an interactive worksheet with input fields, check buttons, hints, and tables — similar to worksheets used in German vocational education (Lehrjahr, Modul, Arbeitsblatt).
+    return `You are an educational worksheet generator for German vocational education (Lehrjahr/Modul/Arbeitsblatt). Convert raw PDF/document text into interactive worksheet JSON.
 
-IMPORTANT: You must respond with ONLY a JSON object. No markdown, no code fences, no explanation — just the raw JSON object.
+RESPOND WITH ONLY A JSON OBJECT. No markdown, no code fences, no explanation.
 
-The JSON object must contain:
-- "title": string — the worksheet title (e.g. "Zahlensysteme", "Morse Code & Huffman Codierung")
-- "label": string — optional module/section label (e.g. "Modul 114 -- Codieren")
-- "subtitle": string — optional subtitle
-- "sections": array of section objects, each with:
-  - "type": "section" | "story" | "info" | "example" | "interactive"
-    - "story": introductory text block (like a story/scenario)
-    - "info": informational note/hint box
-    - "example": example calculation/demonstration block
-    - "interactive": interactive widget section with a special component (pixelGrid, bitVisualizer, truthTable, or encodingExercise)
-    - "section": main exercise section with interactive elements
-  - "number": string or number (optional) — section number like "1", "2", "i", "ii"
-  - "title": string (optional) — section title
-  - "content": string — the main text content in plain markdown-like format. You can use **bold**, *italic*, \`code\`, and line breaks.
-  - "fields": array of input fields (only for type "section"):
-    - "id": string — unique field ID, use pattern like "s1_answer1", "s2_explanation", "t1-r1-dec"
-    - "label": string — label for the field
-    - "type": "text" | "textarea"
-    - "placeholder": string (optional)
-    - "compendiumRef": object (optional) — link to compendium entry: { "ref": "keyword-slug", "label": "Descriptive Label" }. ref is a lowercase slug matching the topic/concept, label is a short German description of what the reference covers.
-  - "table": table object (optional, for section type only):
-    - "id": string — table identifier
-    - "columns": array of { "key": string, "label": string, "editable": boolean, "placeholder"?: string }
-    - "rows": array of objects where keys match column keys, values are pre-filled data (empty string for editable cells)
-  - "checkGroups": array of check groups (optional, for section type):
-    - "id": string — group ID
-    - "checks": array of { "fieldId": string, "expected": string, "hint"?: string, "opts"?: { "normalize"?: boolean, "contains"?: boolean } }
-    - "feedbackId": string — ID for the feedback message
-    - "label": string (optional) — button label, defaults to "Prüfen"
-  - "resets": array of field IDs to reset (optional)
-  - "hints": array of hint objects (optional):
-    - "id": string — unique hint ID like "hint1"
-    - "label": string (optional) — button text, defaults to "Tipp anzeigen"
-    - "content": string — hint text in markdown-like format
-  - "compendiumRefs": array of objects (optional) — links to compendium reference entries. Each object: { "ref": "keyword-slug", "label": "Short German label" }. ref is a lowercase slug matching the topic/concept, label is a short German description like "LZ77 Kompression" or "Dezimal-binär Umrechnung".
-  - "interactive": interactive component object (optional, for section type "interactive" or regular "section") — allows embedding special interactive widgets:
-    - "type": one of "pixelGrid" | "bitVisualizer" | "truthTable" | "encodingExercise"
-    - "props": configuration object specific to each type:
-    
-    For "pixelGrid" — a clickable pixel grid for binary/RLE encoding exercises:
-      - "width": number of columns (e.g. 8)
-      - "height": number of rows (e.g. 8)
-      - "fieldId": string — unique field ID for state persistence
-      - "encodingType": "rle" | "binary" | "none" — whether to show live encoding below the grid
-      - "encodingDirection": "row" | "col" — encoding direction (default "row")
-      - "solution": array of 0/1 values (length = width × height) — the correct grid state (optional)
-      - "labels": { "rows"?: string[], "cols"?: string[] } — optional row/column labels
-    
-    For "bitVisualizer" — toggleable bits showing decimal/hex conversion:
-      - "bits": number of bits (e.g. 8, 16)
-      - "fieldId": string — unique field ID
-      - "labels": string[] — optional bit position labels (e.g. ["128","64","32","16","8","4","2","1"])
-      - "showDecimal": boolean — show decimal value (default true)
-      - "showHex": boolean — show hex value (default true)
-    
-    For "truthTable" — truth table with dropdown selectors for output:
-      - "inputs": string[] — input variable names (e.g. ["A", "B"])
-      - "outputLabel": string — output column label (e.g. "A AND B" or "Q")
-      - "rows": array of objects with input values (optional, auto-generates if omitted)
-      - "fieldId": string — unique field ID
-    
-    For "encodingExercise" — conversion exercises with examples:
-      - "encodingType": "binary" | "hex" | "ascii" | "rle" | "morse"
-      - "fromFormat": string — source format label (e.g. "Dezimal")
-      - "toFormat": string — target format label (e.g. "Binär")
-      - "examples": array of { "input": string, "output": string } — worked examples
-      - "exercises": array of { "input": string, "expected"?: string, "fieldId": string } — practice problems
-      - "fieldId": string — unique field ID
-
-KEY RULES:
-1. Convert every exercise/question into an interactive field with a check mechanism
-2. Use German language for labels and UI elements (Prüfen, Zurücksetzen, Tipp anzeigen, etc.)
-3. Every fill-in-the-blank must have an expected answer in a checkGroup
-4. Tables should have editable cells for student answers and pre-filled "given" values
-5. Hints should guide students without giving away the answer directly
-6. Preserve all educational content — questions, scenarios, tables, formulas
- 7. Field IDs must be unique across the entire worksheet
- 8. For free-text reflection questions (open-ended opinions, explanations), include a field with type "textarea" but NO checkGroup
- 9. Number sections sequentially: "1", "2", "3" for exercises, "i", "ii" for info sections
-  10. CRITICAL: Every "text" type field (not textarea) MUST have a matching check in a checkGroup. A field with type "text" is a fill-in-the-blank with a correct answer — it MUST have an expected value. If you create a "text" field, you MUST also create a checkGroup containing a check for that fieldId.
-  11. When the content involves pixel images, RLE encoding, binary grids, or bit manipulation, prefer using "interactive" type sections with the appropriate component (pixelGrid, bitVisualizer) instead of just text fields. For example, an RLE encoding exercise should use a pixelGrid where students tick boxes to create/decode images, not just a text field to type the encoding.
-  12. When the content involves truth tables or logic gates, use the truthTable interactive component with dropdown selectors for output values.
-  13. When the content involves format conversion exercises (binary↔decimal↔hex, ASCII encoding, Morse code, RLE), use the encodingExercise component with examples and practice exercises.
-
-Example of a good section:
+JSON structure:
 {
-  "type": "section",
-  "number": "1",
-  "title": "Dezimal in Binär umrechnen",
-  "content": "Wandeln Sie die folgenden Dezimalzahlen in Binärzahlen um.",
-  "fields": [
-    {"id": "s1_dec42", "label": "42 als Binärzahl", "type": "text", "placeholder": "z.B. 101010"},
-    {"id": "s1_dec255", "label": "255 als Binärzahl", "type": "text", "placeholder": "..."}
+  "title": "string",
+  "label": "optional module label, e.g. 'Modul 114 -- Codieren'",
+  "subtitle": "optional string",
+  "sections": [
+    {
+      "type": "section" | "story" | "info" | "example" | "interactive",
+      "number": "1", "title": "optional section title",
+      "content": "markdown-like text with **bold**, \`code\`, line breaks",
+      "fields": [{"id":"s1_f1","label":"Label","type":"text|textarea","placeholder":"optional","compendiumRef":{"ref":"slug","label":"Label"}}],
+      "table": {"id":"t1","columns":[{"key":"k","label":"Label","editable":bool}],"rows":[{}]},
+      "checkGroups": [{"id":"cg1","checks":[{"fieldId":"s1_f1","expected":"answer","hint":"optional"}],"feedbackId":"fb1","label":"optional"}],
+      "resets": ["fieldId1"],
+      "hints": [{"id":"h1","content":"hint text"}],
+      "compendiumRefs": [{"ref":"slug","label":"Label"}],
+      "interactive": {
+        "type": "pixelGrid|bitVisualizer|truthTable|encodingExercise",
+        "props": { ... see below ... }
+      }
+    }
+  ]
+}
+
+Section types:
+- "section": main exercise with fields/tables/checkGroups
+- "story": intro text block
+- "info": info/hint box
+- "example": worked example
+- "interactive": widget section with pixelGrid, bitVisualizer, truthTable, or encodingExercise
+
+Interactive component props:
+- pixelGrid: {"width":8,"height":8,"fieldId":"pg1","encodingType":"rle|binary|none","encodingDirection":"row|col","solution":[0,1,...],"labels":{"rows":["Z0",...],"cols":["0",...]}}
+- bitVisualizer: {"bits":8,"fieldId":"bv1","labels":["128","64",...],"showDecimal":true,"showHex":true}
+- truthTable: {"inputs":["A","B"],"outputLabel":"Q = A AND B","fieldId":"tt1"} (rows auto-generated)
+- encodingExercise: {"encodingType":"binary|hex|ascii|rle|morse","fromFormat":"Dezimal","toFormat":"Binär","examples":[{"input":"5","output":"101"}],"exercises":[{"input":"7","expected":"111","fieldId":"e1"}],"fieldId":"enc1"}
+
+RULES:
+1. German UI labels: Prüfen, Zurücksetzen, Tipp anzeigen
+2. Every "text" field MUST have a matching check in a checkGroup with expected answer
+3. "textarea" fields for open-ended questions — no checkGroup needed
+4. Unique field IDs across entire worksheet
+5. Use "interactive" sections for pixel grids, RLE/binary encoding, bit manipulation, truth tables, logic gates
+6. Use pixelGrid for RLE exercises (students tick boxes to create images)
+7. Use bitVisualizer for bit position/value exercises
+8. Use truthTable for logic gate exercises (dropdowns for 0/1 output)
+9. Use encodingExercise for format conversion (binary↔decimal↔hex, ASCII, Morse)
+10. Preserve ALL educational content — questions, scenarios, tables, formulas
+
+Example section:
+{
+  "type":"section","number":"1","title":"Dezimal in Binär umrechnen",
+  "content":"Wandeln Sie die folgenden Dezimalzahlen in Binärzahlen um.",
+  "fields":[
+    {"id":"s1_d42","label":"42 als Binärzahl","type":"text","placeholder":"z.B. 101010"},
+    {"id":"s1_d255","label":"255 als Binärzahl","type":"text","placeholder":"..."}
   ],
-  "checkGroups": [
-    {
-      "id": "cg1",
-      "checks": [
-        {"fieldId": "s1_dec42", "expected": "101010", "hint": "42 = 32 + 8 + 2"},
-        {"fieldId": "s1_dec255", "expected": "11111111", "hint": "255 = 128+64+32+16+8+4+2+1"}
-      ],
-      "feedbackId": "fb1"
-    }
-  ],
-  "resets": ["s1_dec42", "s1_dec255"],
-  "hints": [
-    {"id": "hint1", "content": "Teilen Sie die Zahl wiederholt durch 2 und notieren Sie die Reste von unten nach oben."}
-  ]
+  "checkGroups":[{"id":"cg1","checks":[
+    {"fieldId":"s1_d42","expected":"101010","hint":"42 = 32+8+2"},
+    {"fieldId":"s1_d255","expected":"11111111"}
+  ],"feedbackId":"fb1"}],
+  "resets":["s1_d42","s1_d255"]
 }
 
-Example of an interactive pixelGrid section for RLE encoding:
+Example interactive pixelGrid for RLE:
 {
-  "type": "interactive",
-  "number": "2",
-  "title": "RLE-Kodierung: Bild erstellen",
-  "content": "Klicken Sie auf die Zellen, um das beschriebene Bild zu erstellen. Die RLE-Kodierung wird automatisch angezeigt.",
-  "interactive": {
-    "type": "pixelGrid",
-    "props": {
-      "width": 8,
-      "height": 8,
-      "fieldId": "rle_grid1",
-      "encodingType": "rle",
-      "encodingDirection": "row",
-      "solution": [0,1,1,1,1,1,1,0,1,0,0,0,0,0,0,1,1,0,1,1,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,1,1,1,1,0,1,1,0,0,0,0,0,0,1,0,1,1,1,1,1,1,0],
-      "labels": {"rows": ["Z0","Z1","Z2","Z3","Z4","Z5","Z6","Z7"], "cols": ["0","1","2","3","4","5","6","7"]}
-    }
-  },
-  "hints": [
-    {"id": "rle_hint1", "content": "RLE kodiert jede Zeile als Paare von (Anzahl, Wert). Zeile 0: 1×0, 6×1, 1×0 → 160110"}
-  ]
+  "type":"interactive","number":"2","title":"RLE-Kodierung: Bild erstellen",
+  "content":"Klicken Sie auf die Zellen, um das Bild zu erstellen.",
+  "interactive":{"type":"pixelGrid","props":{"width":8,"height":8,"fieldId":"pg1","encodingType":"rle","encodingDirection":"row","solution":[0,1,1,1,1,1,1,0,1,0,0,0,0,0,0,1]}}
 }
 
-Example of a bitVisualizer section:
+Example interactive truthTable:
 {
-  "type": "interactive",
-  "number": "1",
-  "title": "Binärzahlen verstehen",
-  "content": "Klicken Sie auf die Bits, um verschiedene Werte zu erzeugen.",
-  "interactive": {
-    "type": "bitVisualizer",
-    "props": {
-      "bits": 8,
-      "fieldId": "bit_vis1",
-      "labels": ["128","64","32","16","8","4","2","1"],
-      "showDecimal": true,
-      "showHex": true
-    }
-  }
-}
-
-Example of a truthTable section:
-{
-  "type": "interactive",
-  "number": "3",
-  "title": "Wahrheitstabelle: AND-Gatter",
-  "content": "Füllen Sie die Ausgangsspalte Q für das AND-Gatter aus.",
-  "interactive": {
-    "type": "truthTable",
-    "props": {
-      "inputs": ["A", "B"],
-      "outputLabel": "Q = A AND B",
-      "fieldId": "tt_and1"
-    }
-  },
-  "checkGroups": [
-    {
-      "id": "cg_tt1",
-      "checks": [
-        {"fieldId": "tt_and1_r0", "expected": "0"},
-        {"fieldId": "tt_and1_r1", "expected": "0"},
-        {"fieldId": "tt_and1_r2", "expected": "0"},
-        {"fieldId": "tt_and1_r3", "expected": "1"}
-      ],
-      "feedbackId": "fb_tt1"
-    }
-  ]
-}
-
-Example of an encodingExercise section:
-{
-  "type": "interactive",
-  "number": "4",
-  "title": "Dezimal in Binär umrechnen",
-  "content": "Wandeln Sie die Dezimalzahlen in Binärzahlen um.",
-  "interactive": {
-    "type": "encodingExercise",
-    "props": {
-      "encodingType": "binary",
-      "fromFormat": "Dezimal",
-      "toFormat": "Binär",
-      "examples": [
-        {"input": "5", "output": "101"},
-        {"input": "10", "output": "1010"}
-      ],
-      "exercises": [
-        {"input": "7", "expected": "111", "fieldId": "enc_ex1"},
-        {"input": "15", "expected": "1111", "fieldId": "enc_ex2"}
-      ],
-      "fieldId": "enc_binary1"
-    }
-  },
-  "checkGroups": [
-    {
-      "id": "cg_enc1",
-      "checks": [
-        {"fieldId": "enc_ex1", "expected": "111", "hint": "7 = 4 + 2 + 1"},
-        {"fieldId": "enc_ex2", "expected": "1111", "hint": "15 = 8 + 4 + 2 + 1"}
-      ],
-      "feedbackId": "fb_enc1"
-    }
-  ]
+  "type":"interactive","number":"3","title":"AND-Gatter",
+  "content":"Füllen Sie die Ausgangsspalte Q aus.",
+  "interactive":{"type":"truthTable","props":{"inputs":["A","B"],"outputLabel":"Q = A AND B","fieldId":"tt1"}},
+  "checkGroups":[{"id":"cg2","checks":[
+    {"fieldId":"tt1_r0","expected":"0"},{"fieldId":"tt1_r1","expected":"0"},
+    {"fieldId":"tt1_r2","expected":"0"},{"fieldId":"tt1_r3","expected":"1"}
+  ],"feedbackId":"fb2"}]
 }`;
   }
 
