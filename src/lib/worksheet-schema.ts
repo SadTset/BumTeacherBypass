@@ -28,7 +28,8 @@ export interface WorksheetCheck {
   fieldId: string;
   expected: string;
   hint?: string;
-  opts?: { normalize?: boolean; contains?: boolean };
+  // math: grade by mathematical equivalence (3/4 == 0.75 == 75%) instead of string equality
+  opts?: { normalize?: boolean; contains?: boolean; math?: boolean };
 }
 
 export interface WorksheetCheckGroup {
@@ -341,6 +342,44 @@ export interface CalloutPrimitive extends PrimitiveBase {
   content: string;       // Can contain inline LaTeX
 }
 
+// ─── Math primitives ───
+// Digital replacement for pen-and-paper math: inputs render a live KaTeX preview
+// of what the student types (1/2 → ½, x^2 → x², sqrt(2) → √2), and mathSteps is
+// a multi-line "Rechenweg" scratchpad so working happens in the app, not on paper.
+
+export interface MathInputPrimitive extends PrimitiveBase {
+  type: 'mathInput';
+  fieldId: string;
+  label?: string;        // German label, can contain inline LaTeX, e.g. "x ="
+  placeholder?: string;  // e.g. "z.B. 3/4"
+  width?: string;
+}
+
+export interface MathStepsPrimitive extends PrimitiveBase {
+  type: 'mathSteps';
+  fieldId: string;
+  label?: string;        // e.g. "Rechenweg"
+  minRows?: number;      // initial number of lines (default 3)
+}
+
+// Interactive coordinate system: plots functions of x (linear through exponential)
+// and lets the student DRAW — a line via two clicks (drawMode "line", with live
+// equation readout) or individual points (drawMode "points"). Replaces "zeichnen
+// Sie auf Papier" tasks. Grading against expectedExpr is built in.
+export interface FunctionGraphPrimitive extends PrimitiveBase {
+  type: 'functionGraph';
+  fieldId: string;
+  title?: string;
+  xMin?: number; xMax?: number; yMin?: number; yMax?: number;  // default -10..10
+  // Curves to plot, expr is a function of x, e.g. "1.5x + 1" or "2^x"
+  functions?: Array<{ expr: string; label?: string; color?: string }>;
+  // Static marked points, e.g. a point to verify
+  points?: Array<{ x: number; y: number; label?: string }>;
+  drawMode?: 'none' | 'line' | 'points';
+  expectedExpr?: string;  // grading target for the drawn line/points
+  maxPoints?: number;     // drawMode "points": how many points (default 6)
+}
+
 export type GenericPrimitive =
   | DisplayPrimitive
   | InputPrimitive
@@ -360,7 +399,10 @@ export type GenericPrimitive =
   | StepCalculatorPrimitive
   | FlowDiagramPrimitive
   | KeyValueGridPrimitive
-  | CalloutPrimitive;
+  | CalloutPrimitive
+  | MathInputPrimitive
+  | MathStepsPrimitive
+  | FunctionGraphPrimitive;
 
 export interface GenericComponentProps {
   fieldId: string;

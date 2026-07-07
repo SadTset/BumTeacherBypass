@@ -12,16 +12,39 @@ export interface VisionImage {
 const VISION_CAPABLE_MODELS = [
   // OpenAI
   'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-vision', 'gpt-4.1', 'gpt-4.1-mini',
+  'gpt-5', 'o3', 'o4', 'chatgpt-4o',
   // Anthropic
   'claude-3', 'claude-sonnet', 'claude-haiku', 'claude-opus',
   // Ollama Cloud / popular vision models
-  'gemini', 'llava', 'bakllava', 'moondream', 'qwen2-vl', 'qwen2.5-vl', 'qwen-vl',
-  'minicpm-v', 'internvl', 'glm-4', 'glm-4.5', 'glm-4.6', 'glm-5',
+  'gemini', 'llava', 'bakllava', 'moondream', 'qwen2-vl', 'qwen2.5-vl', 'qwen-vl', 'qwen3-vl',
+  'minicpm-v', 'internvl', 'glm-4', 'glm-4.5', 'glm-4.6', 'glm-5', 'pixtral', 'llama3.2-vision', 'llama4', 'mistral-small',
 ];
 
 function modelSupportsVision(model: string): boolean {
   const lower = model.toLowerCase();
   return VISION_CAPABLE_MODELS.some(m => lower.includes(m));
+}
+
+// Anthropic responses from extended-thinking models (Claude 4.5+/5 family) contain
+// thinking blocks before the text block(s). Reading content[0].text misses the
+// actual answer — collect every text block instead.
+function extractAnthropicText(data: { content?: Array<{ type?: string; text?: string }> }): string {
+  return (Array.isArray(data?.content) ? data.content : [])
+    .filter(b => b?.type === 'text' && typeof b.text === 'string')
+    .map(b => b.text as string)
+    .join('');
+}
+
+// Models occasionally return nothing (empty stream, or a reasoning model that
+// spent its whole completion budget on internal thinking). Previously this was
+// silently converted to '{}', which then failed downstream as "0 sections" with
+// no explanation. Throw a descriptive, retryable error instead.
+function requireContent(content: string | null | undefined, source: string, detail?: string): string {
+  const c = (content || '').trim();
+  if (!c || c === '{}') {
+    throw new Error(`AI returned empty response from ${source}${detail ? ` (${detail})` : ''}`);
+  }
+  return c;
 }
 
 export interface ProviderConfig {
@@ -150,17 +173,63 @@ function repairTruncatedJSON(content: string): string | null {
   return repaired;
 }
 
+// Models writing LaTeX inside JSON regularly emit single-backslash escapes.
+// Two failure classes:
+//  1. Invalid escapes (\( \cdot \sqrt …) — JSON.parse rejects the whole response.
+//  2. Valid-but-unintended escapes (\frac → formfeed+"rac", \times → tab+"imes",
+//     \neq → newline+"eq") — JSON.parse SUCCEEDS and silently corrupts the LaTeX.
+// Repair both: double the backslash of every invalid escape, and of every
+// b/f/n/r/t escape that spells the start of a known LaTeX command.
+const AMBIGUOUS_LATEX_CMDS = /^(?:beta|bmod|binom|bar|bigg?|boxed|frac|forall|neq|nabla|notin|not|nu|ne|nmid|rho|right(?:arrow)?|rangle|text|times|tanh?|theta|tau|top|therefore|triangle|to)(?![a-zA-Z])/;
+
+function fixInvalidJsonEscapes(s: string): string {
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === '\\' && i + 1 < s.length) {
+      const next = s[i + 1];
+      if (next === '\\' || next === '"' || next === '/' || next === 'u') {
+        out += ch + next; // unambiguous JSON escapes, keep
+      } else if ('bfnrt'.includes(next) && AMBIGUOUS_LATEX_CMDS.test(s.slice(i + 1))) {
+        out += '\\\\' + next; // \frac, \times, \neq … — LaTeX, not an escape
+      } else if ('bfnrt'.includes(next)) {
+        out += ch + next; // genuine \n, \t, … escapes
+      } else {
+        out += '\\\\' + next; // invalid escape (\( \cdot …) — make it literal
+      }
+      i++;
+    } else {
+      out += ch;
+    }
+  }
+  return out;
+}
+
+// JSON.parse with LaTeX-escape repair. The repaired variant is tried FIRST:
+// it is a no-op for well-formed responses, fixes hard failures (\( ), and also
+// fixes silent corruption (\frac parsing as formfeed) in otherwise valid JSON.
+function parseJsonLenient(text: string): unknown {
+  const fixed = fixInvalidJsonEscapes(text);
+  try {
+    const parsed = JSON.parse(fixed);
+    if (fixed !== text) console.log('extractJSON: repaired single-backslash LaTeX escapes before parsing');
+    return parsed;
+  } catch {
+    return JSON.parse(text);
+  }
+}
+
 function extractJSON(text: string): unknown {
   const trimmed = text.trim();
 
   try {
-    return JSON.parse(trimmed);
+    return parseJsonLenient(trimmed);
   } catch {}
 
   const fenceMatch = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
   if (fenceMatch) {
     try {
-      return JSON.parse(fenceMatch[1].trim());
+      return parseJsonLenient(fenceMatch[1].trim());
     } catch (e) {
       console.error('extractJSON: fence match found but JSON.parse failed. Content length:', fenceMatch[1].length, 'Last 200 chars:', fenceMatch[1].slice(-200));
     }
@@ -169,7 +238,7 @@ function extractJSON(text: string): unknown {
   const greedyFenceMatch = trimmed.match(/```(?:json)?\s*\n([\s\S]*)\n\s*```/);
   if (greedyFenceMatch && greedyFenceMatch[1] !== fenceMatch?.[1]) {
     try {
-      return JSON.parse(greedyFenceMatch[1].trim());
+      return parseJsonLenient(greedyFenceMatch[1].trim());
     } catch {}
   }
 
@@ -194,7 +263,7 @@ function extractJSON(text: string): unknown {
         else if (ch === '}') { depth--; if (depth === 0) lastValidClose = i; }
         if (depth === 0) {
           try {
-            return JSON.parse(content.substring(firstBrace, i + 1));
+            return parseJsonLenient(content.substring(firstBrace, i + 1));
           } catch (e) {
             console.error('extractJSON: unclosed fence bracket match failed. Content length:', i + 1, 'Last 200 chars:', content.substring(firstBrace, i + 1).slice(-200));
             break;
@@ -207,7 +276,7 @@ function extractJSON(text: string): unknown {
         const repaired = repairTruncatedJSON(content.substring(firstBrace));
         if (repaired) {
           try {
-            return JSON.parse(repaired);
+            return parseJsonLenient(repaired);
           } catch (e) {
             console.error('extractJSON: repair attempt failed. Last 200 chars:', repaired.slice(-200));
           }
@@ -261,7 +330,7 @@ function extractJSON(text: string): unknown {
 
     if (depth === 0) {
       try {
-        return JSON.parse(trimmed.substring(startIdx, i + 1));
+        return parseJsonLenient(trimmed.substring(startIdx, i + 1));
       } catch (e) {
         console.error('extractJSON: found brackets but JSON.parse failed, first 500 chars:', trimmed.substring(startIdx, startIdx + 500));
         break;
@@ -274,7 +343,7 @@ function extractJSON(text: string): unknown {
     const repaired = repairTruncatedJSON(trimmed.substring(startIdx));
     if (repaired) {
       try {
-        return JSON.parse(repaired);
+        return parseJsonLenient(repaired);
       } catch (e) {
         console.error('extractJSON: raw JSON repair attempt failed. Last 200 chars:', repaired.slice(-200));
       }
@@ -293,7 +362,7 @@ function extractJSON(text: string): unknown {
 const COMPENDIUM_PRIMITIVE_TYPES = new Set([
   'display', 'input', 'textarea', 'table', 'toggleGrid', 'dropdown', 'stepper', 'codeLine',
   'resetButton', 'row', 'col', 'repeat',
-  'formulaDisplay', 'stepCalculator', 'flowDiagram', 'keyValueGrid', 'callout',
+  'formulaDisplay', 'stepCalculator', 'flowDiagram', 'keyValueGrid', 'callout', 'mathInput', 'mathSteps', 'functionGraph',
 ]);
 
 // Unwrap "\( x \)" / "\[ x \]" / "$x$" / "$$x$$" around a raw-LaTeX field, but only
@@ -365,6 +434,46 @@ function sanitizeInteractiveExamples(raw: unknown): Array<{ label: string; compo
   return result;
 }
 
+type OpenAIChatResponse = { choices?: Array<{ message?: { content?: string | null }; finish_reason?: string }> };
+type OpenAIChatClient = {
+  chat: { completions: { create: (params: Record<string, unknown>) => Promise<OpenAIChatResponse> } };
+};
+
+// Newer OpenAI models (o-series, gpt-5 family, …) reject legacy request parameters:
+// they want max_completion_tokens instead of max_tokens and refuse non-default
+// temperature. Rather than maintaining a model-name allowlist that goes stale,
+// adapt based on the API's own 400 feedback and retry with corrected parameters.
+export async function openAIChatCompat(client: unknown, params: Record<string, unknown>): Promise<OpenAIChatResponse> {
+  const c = client as OpenAIChatClient;
+  const p = { ...params };
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      return await c.chat.completions.create(p);
+    } catch (err) {
+      const e = err as { status?: number; param?: string; message?: string };
+      const msg = String(e?.message || '');
+      if (e?.status === 400 && 'max_tokens' in p && (e?.param === 'max_tokens' || msg.includes("'max_tokens'"))) {
+        p.max_completion_tokens = p.max_tokens;
+        delete p.max_tokens;
+        console.log('OpenAI compat: switching max_tokens → max_completion_tokens for this model');
+        continue;
+      }
+      if (e?.status === 400 && 'temperature' in p && (e?.param === 'temperature' || msg.includes("'temperature'"))) {
+        delete p.temperature;
+        console.log('OpenAI compat: dropping unsupported temperature for this model');
+        continue;
+      }
+      if (e?.status === 400 && 'response_format' in p && msg.includes('response_format')) {
+        delete p.response_format;
+        console.log('OpenAI compat: dropping unsupported response_format for this model');
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error('OpenAI request failed after parameter compatibility retries');
+}
+
 export class AIProvider {
   private config: ProviderConfig;
   private enrichmentConfig?: ProviderConfig;
@@ -405,7 +514,8 @@ JSON structure:
 
 RULES:
 1. GERMAN labels: use German for all labels, titles, placeholders
-2. PRESERVE all educational content — every question, scenario, table, formula, example from the source
+2. PRESERVE all educational content — every question, scenario, table, formula, example from the source. Write ALL mathematical formulas as inline LaTeX \\( ... \\) in content (e.g. \\( 2^x = 32 \\), \\( \\frac{3}{4} \\))
+   JSON ESCAPING: inside JSON strings every LaTeX backslash must be DOUBLED — write "\\\\frac{3}{4}" and "\\\\( x \\\\)" so they parse to \\frac and \\(. A single backslash before a letter or parenthesis is invalid JSON and breaks the whole response.
 3. Every fill-in-the-blank question → "text" field with a unique id
 4. Every open-ended/reflection question → "textarea" field (no expected answer needed)
 5. Tables with editable cells for student answers, given values pre-filled
@@ -525,12 +635,27 @@ INTERACTIVE COMPONENT TYPES:
   - dropdown: {"type": "dropdown", "fieldId": "dd1", "rows": [{"question": "German question", "options": ["A", "B", "C"], "correctAnswers": ["A"]}], "multipleSelection": false}
   - stepper: {"type": "stepper", "fieldId": "st1", "steps": [{"label": "Schritt 1", "description": "German desc", "inputPlaceholder": "Was passiert?"}]}
   - codeLine: {"type": "codeLine", "fieldId": "cl1", "cells": [{"value": "1010", "editable": false}, {"fieldId": "cl1_r1", "editable": true, "maxLength": 1, "width": "2rem"}]}
-  - checkButton: {"type": "checkButton", "checks": [{"fieldId": "f1", "expected": "correct answer", "hint": "German hint"}], "feedbackId": "fb1", "label": "Prüfen"}
+  - checkButton: {"type": "checkButton", "checks": [{"fieldId": "f1", "expected": "correct answer", "hint": "German hint", "opts": {"math": true}}], "feedbackId": "fb1", "label": "Prüfen"} — set "opts": {"math": true} for mathematical answers (equivalence grading), omit it for text answers
   - resetButton: {"type": "resetButton", "fieldIds": ["f1", "f2"], "label": "Zurücksetzen"}
   - solutionButton: {"type": "solutionButton", "fieldId": "f1", "solution": "the solution", "label": "Lösung anzeigen"}
   - row: {"type": "row", "children": [...primitives...], "gap": "0.5rem", "align": "center", "wrap": true}
   - col: {"type": "col", "children": [...primitives...], "gap": "0.5rem", "align": "stretch"}
   - repeat: {"type": "repeat", "fieldId": "rep1", "count": 4, "child": {...primitive...}, "fieldIdTemplate": "rep1_i{idx}", "labelTemplate": "Zeile {idx}", "startIndex": 1}
+
+  MATH PRIMITIVES (for mathematics tasks — from basic arithmetic to exponential equations):
+  - mathInput: {"type": "mathInput", "fieldId": "m1", "label": "x =", "placeholder": "z.B. 3/4"} — answer field with LIVE math preview: the student types 1/2, x^2 or sqrt(2) and sees the rendered formula while typing
+  - mathSteps: {"type": "mathSteps", "fieldId": "m1_weg", "label": "Rechenweg", "minRows": 3} — multi-line working-steps scratchpad with live preview per line (replaces paper; NOT graded, do not add checks for it)
+  - functionGraph: {"type": "functionGraph", "fieldId": "g1", "title": "Gerade g", "xMin": -8, "xMax": 8, "yMin": -8, "yMax": 8, "functions": [{"expr": "1.5x + 1", "label": "g"}], "points": [{"x": 3, "y": 3.5, "label": "P"}], "drawMode": "none"} — interactive coordinate system. Plots any function of x: linear ("1.5x+1"), quadratic ("x^2-2"), exponential ("2^x").
+    · drawMode "line" + "expectedExpr": the student DRAWS a line with two clicks (live equation readout, snapping, built-in Prüfen against expectedExpr)
+    · drawMode "points" + "expectedExpr": the student plots value-table points (built-in Prüfen)
+    · When the DOCUMENT shows a graph, RECREATE it with functionGraph (read the function from the graph image or infer it from context). When a task says "zeichnen Sie", use drawMode — NEVER tell the student to draw on paper, and never use a textarea as a substitute for drawing.
+
+  MATH GRADING: for numeric/algebraic answers give the check "opts": {"math": true}. Grading is EQUIVALENCE-based — the student may answer 0.75, 0,75, 3/4 or 75% and all count when "expected" is mathematically equal. Write "expected" as a plain expression in input syntax (3/4, 2^5, sqrt(2), x=3 — NOT LaTeX).
+
+  CALCULATION vs REFLECTION — this decides the whole section layout:
+  · A task whose result can be computed ("bestimmen Sie", "berechnen Sie", "lösen Sie", "wo schneidet...", "liegt der Punkt auf...") is NOT an open question. Replace its textarea with a custom component: mathSteps (Rechenweg) + mathInput(s) for the result(s) + checkButton with opts math. EVERY calculation task gets its own Rechenweg.
+  · Only genuine explain/justify/describe tasks keep a textarea.
+  · Structure for a calculation task: display or formulaDisplay (the task) → functionGraph (if a graph is involved) → mathSteps (Rechenweg) → row [ mathInput (final answer), checkButton with opts math, resetButton ].
 
   VISUALIZATION PRIMITIVES (for explaining/demonstrating inside a custom component — combine them with the input primitives above):
   - formulaDisplay: {"type": "formulaDisplay", "latex": "C = M^e \\bmod N", "caption": "German caption", "display": "block"} — beautifully rendered LaTeX formula
@@ -566,6 +691,8 @@ INTERACTIVE COMPONENT TYPES:
 
 toolGaps: ONLY emit if content needs something the primitives above truly cannot express. Format: [{"name": "englishName", "reason": "German reason", "contentExample": "example", "suggestedProps": "description"}]
 
+JSON ESCAPING: inside JSON strings every LaTeX backslash must be DOUBLED — write "\\\\frac{3}{4}" and "\\\\( x \\\\)" so they parse to \\frac and \\(. A single backslash before a letter or parenthesis is invalid JSON and breaks the whole response.
+
 RESPOND WITH ONLY THE JSON PATCH. No markdown, no code fences. Start with { and end with }.`;
   }
 
@@ -597,6 +724,8 @@ Check for these problems and fix ALL that you find:
    - COMPONENT FIT: if a component does not match its section's topic (wrong algorithm, LZ77 simulator on an HTTPS worksheet), replace it with a fitting component or plain fields
    - ADDED PRACTICE SECTIONS ("Wissens-Check", "Zusatzübung", numbers like "Z1"): these are INTENTIONAL enrichment beyond the source document — do NOT remove them. Verify every quiz answer is factually correct and unambiguous; fix wrong or debatable ones. Small invented practice data is fine there; inside the document's ORIGINAL tasks the document's own data must be used.
    - RECOMPUTE all stored solutions step by step (xorCalculator "solution" = inputA XOR inputB, lz78/compressionTable "solution" rows, pixelGrid "solution") and fix any that are wrong
+   - MATH ANSWERS: checks for mathInput fields must have "opts": {"math": true} and "expected" as a plain expression (3/4, 2^5, sqrt(2), x=3 — not LaTeX). Grading is equivalence-based, so any ONE correct form suffices. mathSteps fields are scratchpads and must NOT have checks
+   - MATH TASKS AS TEXTAREAS: a calculation task ("bestimmen", "berechnen", "lösen") that ended up as a plain textarea is a defect — replace it with mathSteps + mathInput + checkButton (opts math). A drawing task as textarea is a defect — replace it with functionGraph (drawMode "line" or "points" with expectedExpr). Never let a worksheet tell the student to work on paper
 
 4. ORPHANED/DUPLICATE FIELD IDs: Every field should have a unique "id" across the entire worksheet. Remove or rename duplicates.
 
@@ -615,6 +744,8 @@ Check for these problems and fix ALL that you find:
 11. MISSING INTERACTIVITY: if the worksheet contains NO checkable element at all (no checkGroups, no self-checking component — only textareas), ADD one new section titled "Wissens-Check" at the end: a choiceMatrix or dropdownChoice with 3-6 factually correct questions about the worksheet's topic. This app exists to turn passive worksheets into interactive learning — a worksheet with nothing to check has failed that goal.
 
 NEVER REMOVE CONTENT: Your output must contain EVERY section, field, interactive component, and hint from the input — fixed, not deleted. You may only remove exact duplicates. Dropping content is a failure.
+
+JSON ESCAPING: inside JSON strings every LaTeX backslash must be DOUBLED — write "\\\\frac{3}{4}" and "\\\\( x \\\\)" so they parse to \\frac and \\(. A single backslash before a letter or parenthesis is invalid JSON and breaks the whole response.
 
 RESPOND WITH ONLY THE COMPLETE CORRECTED JSON OBJECT. No markdown, no code fences, no explanation. The JSON must start with { and end with }.
 
@@ -980,7 +1111,7 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
 
   private async callProviderWithConfig(config: ProviderConfig, systemPrompt: string, userMessage: string, images?: VisionImage[], maxRetries = 2): Promise<string> {
     // Only send images to models that support vision
-    const effectiveImages = images && images.length > 0 && modelSupportsVision(config.model) ? images : undefined;
+    let effectiveImages = images && images.length > 0 && modelSupportsVision(config.model) ? images : undefined;
     let lastError: Error | null = null;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -1000,10 +1131,17 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
         }
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
+        // Model rejected the image payload (not vision-capable despite our list) —
+        // retry without images rather than failing the whole page.
+        if (effectiveImages && /image|vision|multimodal/i.test(lastError.message)) {
+          console.warn(`Model ${config.model} rejected image input — retrying without images: ${lastError.message.substring(0, 150)}`);
+          effectiveImages = undefined;
+          continue;
+        }
         // Node's fetch wraps network errors as "fetch failed" with the real code
         // (EAI_AGAIN, ECONNREFUSED, …) on error.cause — check both places.
         const causeCode = String((lastError as { cause?: { code?: string } }).cause?.code || '');
-        const isRetryable = lastError.message.includes('429') || lastError.message.includes('503') || lastError.message.includes('timeout') || lastError.message.includes('ECONNRESET') || lastError.message.includes('socket hang up') || lastError.message.includes('fetch failed')
+        const isRetryable = lastError.message.includes('429') || lastError.message.includes('503') || lastError.message.includes('timeout') || lastError.message.includes('ECONNRESET') || lastError.message.includes('socket hang up') || lastError.message.includes('fetch failed') || lastError.message.includes('empty response')
           || ['EAI_AGAIN', 'ENOTFOUND', 'ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_SOCKET'].includes(causeCode);
         if (!isRetryable || attempt === maxRetries) throw lastError;
         const delay = (attempt + 1) * 3000;
@@ -1023,7 +1161,7 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
           { type: 'text' as const, text: userMessage },
         ]
       : userMessage;
-    const completion = await client.chat.completions.create({
+    const baseParams = {
       model: config.model,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -1031,9 +1169,17 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
       ],
       response_format: { type: 'json_object' },
       temperature: 0.2,
-      max_tokens: 16384,
-    });
-    return completion.choices[0]?.message?.content || '{}';
+    };
+    let completion = await openAIChatCompat(client, { ...baseParams, max_tokens: 16384 });
+    // Reasoning models can spend the entire completion budget on internal
+    // thinking, returning empty content with finish_reason "length" — retrying
+    // with the same budget cannot succeed, so double it once.
+    const first = completion.choices?.[0];
+    if (!(first?.message?.content || '').trim() && first?.finish_reason === 'length') {
+      console.warn(`OpenAI: ${config.model} exhausted its completion budget on reasoning — retrying with a doubled budget`);
+      completion = await openAIChatCompat(client, { ...baseParams, max_tokens: 32768 });
+    }
+    return requireContent(completion.choices?.[0]?.message?.content, 'OpenAI', `model: ${config.model}, finish_reason: ${completion.choices?.[0]?.finish_reason || 'unknown'}`);
   }
 
   private async callAnthropic(config: ProviderConfig, systemPrompt: string, userMessage: string, images?: VisionImage[]): Promise<string> {
@@ -1043,30 +1189,41 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
           { type: 'text' as const, text: userMessage },
         ]
       : userMessage;
-    const response = await fetch(`${config.baseUrl.replace(/\/v1$/, '')}/v1/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': config.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: config.model,
-        max_tokens: 16384,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userContent }],
-      }),
-      signal: AbortSignal.timeout(900000),
-    });
 
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`Anthropic API error: ${response.status} ${err}`);
+    const request = async (maxTokens: number) => {
+      const response = await fetch(`${config.baseUrl.replace(/\/v1$/, '')}/v1/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': config.apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: config.model,
+          max_tokens: maxTokens,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: userContent }],
+        }),
+        signal: AbortSignal.timeout(900000),
+      });
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Anthropic API error: ${response.status} ${err}`);
+      }
+      return await response.json();
+    };
+
+    let data = await request(16384);
+    let text = extractAnthropicText(data);
+    // Thinking models can spend the whole budget before emitting text — a retry
+    // with the same budget cannot succeed, so double it once.
+    if (!text.trim() && data.stop_reason === 'max_tokens') {
+      console.warn(`Anthropic: ${config.model} exhausted its budget on thinking — retrying with a doubled budget`);
+      data = await request(32768);
+      text = extractAnthropicText(data);
     }
-
-    const data = await response.json();
-    return data.content?.[0]?.text || '{}';
+    return requireContent(text, 'Anthropic', `model: ${config.model}, stop_reason: ${data.stop_reason || 'unknown'}`);
   }
 
   private async callOllama(config: ProviderConfig, systemPrompt: string, userMessage: string, images?: VisionImage[]): Promise<string> {
@@ -1098,7 +1255,7 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
     }
 
     const data = await response.json();
-    return data.message?.content || '{}';
+    return requireContent(data.message?.content, 'Ollama', `model: ${config.model}, done_reason: ${data.done_reason || 'unknown'}`);
   }
 
   private async callOllamaCloud(config: ProviderConfig, systemPrompt: string, userMessage: string, images?: VisionImage[]): Promise<string> {
@@ -1161,7 +1318,7 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
           }
           if (chunk.done) {
             reader.cancel();
-            return fullContent || '{}';
+            return requireContent(fullContent, 'Ollama Cloud', `model: ${config.model}, done_reason: ${chunk.done_reason || 'unknown'}`);
           }
         } catch {}
       }
@@ -1177,7 +1334,7 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
       } catch {}
     }
 
-    return fullContent || '{}';
+    return requireContent(fullContent, 'Ollama Cloud', `model: ${config.model}, stream ended without done`);
   }
 
   private async callOpenAICompatible(config: ProviderConfig, systemPrompt: string, userMessage: string, images?: VisionImage[]): Promise<string> {
@@ -1201,7 +1358,7 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
 
     let completion;
     try {
-      completion = await client.chat.completions.create({
+      completion = await openAIChatCompat(client, {
         model: config.model,
         messages,
         response_format: { type: 'json_object' },
@@ -1209,7 +1366,9 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
         max_tokens: 16384,
       });
     } catch {
-      completion = await client.chat.completions.create({
+      // Some OpenAI-compatible servers fail on response_format without a clean
+      // 400 — retry once without it.
+      completion = await openAIChatCompat(client, {
         model: config.model,
         messages,
         temperature: 0.2,
@@ -1217,7 +1376,7 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
       });
     }
 
-    return completion.choices[0]?.message?.content || '{}';
+    return requireContent(completion.choices?.[0]?.message?.content, 'OpenAI-kompatibel', `model: ${config.model}, finish_reason: ${completion.choices?.[0]?.finish_reason || 'unknown'}`);
   }
 
   async testConnection(): Promise<{ ok: boolean; error?: string }> {
@@ -1302,8 +1461,8 @@ ${rawText.substring(0, 1500)}`;
         case 'openai': {
           const OpenAI = await import('openai');
           const client = new OpenAI.default({ apiKey: this.config.apiKey, baseURL: this.config.baseUrl });
-          const completion = await client.chat.completions.create({ model: this.config.model, messages, response_format: { type: 'json_object' }, temperature: 0 });
-          responseText = completion.choices[0]?.message?.content || '{}';
+          const completion = await openAIChatCompat(client, { model: this.config.model, messages, response_format: { type: 'json_object' }, temperature: 0 });
+          responseText = completion.choices?.[0]?.message?.content || '{}';
           break;
         }
         case 'anthropic': {
@@ -1315,7 +1474,7 @@ ${rawText.substring(0, 1500)}`;
           });
           if (!res.ok) throw new Error(`Anthropic classify error: ${res.status}`);
           const data = await res.json();
-          responseText = data.content?.[0]?.text || '{}';
+          responseText = extractAnthropicText(data) || '{}';
           break;
         }
         case 'ollama':
@@ -1338,11 +1497,11 @@ ${rawText.substring(0, 1500)}`;
           const client = new OpenAI.default({ apiKey: this.config.apiKey || 'not-needed', baseURL: this.config.baseUrl });
           let completion;
           try {
-            completion = await client.chat.completions.create({ model: this.config.model, messages, response_format: { type: 'json_object' }, temperature: 0 });
+            completion = await openAIChatCompat(client, { model: this.config.model, messages, response_format: { type: 'json_object' }, temperature: 0 });
           } catch {
-            completion = await client.chat.completions.create({ model: this.config.model, messages, temperature: 0 });
+            completion = await openAIChatCompat(client, { model: this.config.model, messages, temperature: 0 });
           }
-          responseText = completion.choices[0]?.message?.content || '{}';
+          responseText = completion.choices?.[0]?.message?.content || '{}';
           break;
         }
       }
@@ -1510,8 +1669,8 @@ ${rawText.substring(0, 8000)}`;
         case 'openai': {
           const OpenAI = await import('openai');
           const client = new OpenAI.default({ apiKey: this.config.apiKey, baseURL: this.config.baseUrl });
-          const completion = await client.chat.completions.create({ model: this.config.model, messages, response_format: { type: 'json_object' }, temperature: 0.2, max_tokens: 16384 });
-          responseText = completion.choices[0]?.message?.content || '[]';
+          const completion = await openAIChatCompat(client, { model: this.config.model, messages, response_format: { type: 'json_object' }, temperature: 0.2, max_tokens: 16384 });
+          responseText = completion.choices?.[0]?.message?.content || '[]';
           break;
         }
         case 'anthropic': {
@@ -1523,7 +1682,7 @@ ${rawText.substring(0, 8000)}`;
           });
           if (!res.ok) throw new Error(`Anthropic compendium error: ${res.status}`);
           const data = await res.json();
-          responseText = data.content?.[0]?.text || '{}';
+          responseText = extractAnthropicText(data) || '{}';
           break;
         }
         case 'ollama':
@@ -1546,11 +1705,11 @@ ${rawText.substring(0, 8000)}`;
           const client = new OpenAI.default({ apiKey: this.config.apiKey || 'not-needed', baseURL: this.config.baseUrl });
           let completion;
           try {
-            completion = await client.chat.completions.create({ model: this.config.model, messages, response_format: { type: 'json_object' }, temperature: 0.2, max_tokens: 16384 });
+            completion = await openAIChatCompat(client, { model: this.config.model, messages, response_format: { type: 'json_object' }, temperature: 0.2, max_tokens: 16384 });
           } catch {
-            completion = await client.chat.completions.create({ model: this.config.model, messages, temperature: 0.2, max_tokens: 16384 });
+            completion = await openAIChatCompat(client, { model: this.config.model, messages, temperature: 0.2, max_tokens: 16384 });
           }
-          responseText = completion.choices[0]?.message?.content || '[]';
+          responseText = completion.choices?.[0]?.message?.content || '[]';
           break;
         }
       }

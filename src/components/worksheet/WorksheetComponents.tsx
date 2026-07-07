@@ -2,6 +2,22 @@
 
 import Link from 'next/link';
 import { useWorksheet } from './WorksheetProvider';
+import { Latex } from '@/components/katex-renderer';
+import { exprToLatex } from '@/lib/math-eval';
+
+// Show a live-rendered preview under text inputs when the typed value is a math
+// expression with actual math syntax (1/2, x^2, sqrt(3)) — students see the
+// formula they are entering, like writing it on paper.
+function InlineMathPreview({ value }: { value: string }) {
+  if (!value || !/[/^%:]|sqrt|pi\b/.test(value)) return null;
+  const latex = exprToLatex(value);
+  if (!latex) return null;
+  return (
+    <div className="mt-1 px-2 py-1 rounded bg-[var(--surface)] border border-[var(--border)] inline-block">
+      <Latex tex={latex} />
+    </div>
+  );
+}
 
 export function Breadcrumb({ items }: { items: Array<{ label: string; href?: string }> }) {
   return (
@@ -66,7 +82,10 @@ export function InputField({ id, label, placeholder, type = 'text', compendiumRe
       {type === 'textarea' ? (
         <textarea id={id} rows={5} placeholder={placeholder} className="w-full p-3 border border-[var(--border)] rounded-lg bg-[var(--input-bg)] font-sans text-sm leading-relaxed outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)] resize-y min-h-[100px]" value={fields[id] || ''} onChange={e => setFieldValue(id, e.target.value)} />
       ) : (
-        <input id={id} type={type} placeholder={placeholder} className="w-full p-2.5 border border-[var(--border)] rounded-lg bg-[var(--input-bg)] font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)]" value={fields[id] || ''} onChange={e => setFieldValue(id, e.target.value)} />
+        <>
+          <input id={id} type={type} placeholder={placeholder} className="w-full p-2.5 border border-[var(--border)] rounded-lg bg-[var(--input-bg)] font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)]" value={fields[id] || ''} onChange={e => setFieldValue(id, e.target.value)} />
+          <InlineMathPreview value={fields[id] || ''} />
+        </>
       )}
     </div>
   );

@@ -24,7 +24,11 @@ export function pageNeedsVision(text: string): boolean {
   if (trimmed.length < 50) return true;
   // Very few words relative to a typical text page
   const words = trimmed.split(/\s+/).filter(Boolean);
-  return words.length < 20;
+  if (words.length < 20) return true;
+  // Pages that reference visual content the text extraction cannot carry
+  // (graphs, diagrams, drawings) — the model must SEE these to recreate them,
+  // e.g. to read a plotted line's slope off a math worksheet.
+  return /graph|diagramm|koordinatensystem|skizze|abbildung|zeichnung|schaubild|obige[nrm]?\s|bild\b/i.test(trimmed);
 }
 
 /**

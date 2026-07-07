@@ -3,7 +3,8 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useWorksheet } from './WorksheetProvider';
 import { Latex, LatexText } from '@/components/katex-renderer';
-import type { PixelGridProps, BitVisualizerProps, TruthTableProps, EncodingExerciseProps, HuffmanTreeProps, LZ77SimulatorProps, LZ77Triple, CompressionTableProps, XorCalculatorProps, AsymmetricFlowProps, ChoiceMatrixProps, DropdownChoiceProps, GenericComponentProps, GenericPrimitive, DisplayPrimitive, InputPrimitive, TextareaPrimitive, TablePrimitive, ToggleGridPrimitive, DropdownPrimitive, StepperPrimitive, CodeLinePrimitive, CheckButtonPrimitive, ResetButtonPrimitive, SolutionButtonPrimitive, RowPrimitive, ColPrimitive, RepeatPrimitive, FormulaDisplayPrimitive, StepCalculatorPrimitive, FlowDiagramPrimitive, KeyValueGridPrimitive, CalloutPrimitive } from '@/lib/worksheet-schema';
+import { exprToLatex, looksLikeMath, evaluateExpression } from '@/lib/math-eval';
+import type { PixelGridProps, BitVisualizerProps, TruthTableProps, EncodingExerciseProps, HuffmanTreeProps, LZ77SimulatorProps, LZ77Triple, CompressionTableProps, XorCalculatorProps, AsymmetricFlowProps, ChoiceMatrixProps, DropdownChoiceProps, GenericComponentProps, GenericPrimitive, DisplayPrimitive, InputPrimitive, TextareaPrimitive, TablePrimitive, ToggleGridPrimitive, DropdownPrimitive, StepperPrimitive, CodeLinePrimitive, CheckButtonPrimitive, ResetButtonPrimitive, SolutionButtonPrimitive, RowPrimitive, ColPrimitive, RepeatPrimitive, FormulaDisplayPrimitive, StepCalculatorPrimitive, FlowDiagramPrimitive, KeyValueGridPrimitive, CalloutPrimitive, MathInputPrimitive, MathStepsPrimitive, FunctionGraphPrimitive } from '@/lib/worksheet-schema';
 
 export function PixelGrid({ props }: { props: PixelGridProps }) {
   const { fields, setFieldValue, checkField, feedbacks } = useWorksheet();
@@ -2387,6 +2388,317 @@ function renderCallout(p: CalloutPrimitive) {
   );
 }
 
+// ─── Math primitives (digital pen-and-paper replacement) ───
+
+// Live KaTeX preview of typed math: "1/2" shows ½, "x^2" shows x², etc.
+function MathPreview({ value }: { value: string }) {
+  const latex = useMemo(() => {
+    if (!value.trim() || !looksLikeMath(value)) return null;
+    return exprToLatex(value);
+  }, [value]);
+  if (!latex) return null;
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded bg-[var(--surface)] border border-[var(--border)]" style={{ minHeight: '1.9rem' }}>
+      <Latex tex={latex} />
+    </span>
+  );
+}
+
+function MathInputC({ p, ctx }: { p: MathInputPrimitive; ctx: WkCtx }) {
+  const value = ctx.fields[p.fieldId] || '';
+  const fb = ctx.feedbacks[p.fieldId];
+  return (
+    <div key={p.id || p.fieldId} style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+      {p.label && <label className="block text-sm font-medium text-[var(--text)]"><LatexText text={p.label} /></label>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          inputMode="text"
+          value={value}
+          onChange={e => ctx.setFieldValue(p.fieldId, e.target.value)}
+          placeholder={p.placeholder || 'z.B. 3/4 oder sqrt(2)'}
+          className={`px-3 py-2 border rounded-lg bg-[var(--input-bg)] text-sm font-mono outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)] transition-all ${fb ? (fb.type === 'success' ? 'border-[var(--success)] bg-[var(--success-bg)]' : 'border-[var(--error)] bg-[var(--error-bg)]') : 'border-[var(--border)]'}`}
+          style={{ width: p.width || '12rem' }}
+        />
+        <MathPreview value={value} />
+      </div>
+      <div className="text-xs text-[var(--text-muted)]">Brüche als 3/4, Potenzen als x^2, Wurzeln als sqrt(2)</div>
+    </div>
+  );
+}
+
+function MathStepsC({ p, ctx }: { p: MathStepsPrimitive; ctx: WkCtx }) {
+  const minRows = Math.max(1, p.minRows || 3);
+  const raw = ctx.fields[p.fieldId] || '';
+  const lines = raw ? raw.split('\n') : [];
+  while (lines.length < minRows) lines.push('');
+
+  const setLine = (idx: number, val: string) => {
+    const next = [...lines];
+    next[idx] = val.replace(/\n/g, '');
+    ctx.setFieldValue(p.fieldId, next.join('\n'));
+  };
+  const addLine = () => ctx.setFieldValue(p.fieldId, [...lines, ''].join('\n'));
+  const removeLine = (idx: number) => {
+    if (lines.length <= 1) return;
+    const next = lines.filter((_, i) => i !== idx);
+    ctx.setFieldValue(p.fieldId, next.join('\n'));
+  };
+
+  return (
+    <div key={p.id || p.fieldId} className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="font-semibold text-sm text-[var(--accent-dark)]">{p.label || 'Rechenweg'}</span>
+        <span className="text-xs text-[var(--text-muted)]">wird nicht bewertet — dein Notizblatt</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        {lines.map((line, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <span className="text-xs text-[var(--text-muted)] w-4 text-right shrink-0">{i + 1}.</span>
+            <input
+              type="text"
+              value={line}
+              onChange={e => setLine(i, e.target.value)}
+              placeholder={i === 0 ? 'z.B. 2x + 4 = 10' : ''}
+              className="flex-1 min-w-[10rem] px-3 py-1.5 border border-[var(--border)] rounded-lg bg-[var(--input-bg)] text-sm font-mono outline-none focus:border-[var(--accent)] transition-all"
+            />
+            <MathPreview value={line} />
+            {lines.length > 1 && (
+              <button type="button" onClick={() => removeLine(i)} aria-label="Zeile entfernen" className="text-[var(--text-muted)] hover:text-[var(--error)] bg-transparent border-none cursor-pointer px-1 shrink-0">×</button>
+            )}
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={addLine} className="mt-2 text-xs border border-[var(--border)] text-[var(--text-muted)] px-2.5 py-1 rounded-lg hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors bg-transparent cursor-pointer">
+        + Zeile
+      </button>
+    </div>
+  );
+}
+
+// ─── Function graph: interactive coordinate system ───
+// Plots functions of x and lets students draw lines (two clicks, live equation
+// readout) or plot points — the digital version of graph-paper tasks.
+
+const GRAPH_COLORS = ['#b8860b', '#4a90d9', '#28a745', '#c026d3', '#e0a800'];
+
+function formatNum(n: number): string {
+  const rounded = Math.round(n * 100) / 100;
+  return String(rounded).replace('.', ',');
+}
+
+function lineEquation(p1: { x: number; y: number }, p2: { x: number; y: number }): string {
+  if (Math.abs(p2.x - p1.x) < 1e-9) return `x = ${formatNum(p1.x)}`;
+  const m = (p2.y - p1.y) / (p2.x - p1.x);
+  const b = p1.y - m * p1.x;
+  const mPart = Math.abs(m - 1) < 1e-9 ? 'x' : Math.abs(m + 1) < 1e-9 ? '-x' : `${formatNum(m)} \\cdot x`;
+  const bPart = Math.abs(b) < 1e-9 ? '' : b > 0 ? ` + ${formatNum(b)}` : ` - ${formatNum(-b)}`;
+  return `y = ${mPart}${bPart}`;
+}
+
+function FunctionGraphC({ p, ctx }: { p: FunctionGraphPrimitive; ctx: WkCtx }) {
+  const xMin = p.xMin ?? -10, xMax = p.xMax ?? 10;
+  const yMin = p.yMin ?? -10, yMax = p.yMax ?? 10;
+  const W = 480, H = Math.max(240, Math.round(W * (yMax - yMin) / (xMax - xMin)));
+  const sx = W / (xMax - xMin), sy = H / (yMax - yMin);
+  const toPx = (x: number, y: number) => ({ px: (x - xMin) * sx, py: (yMax - y) * sy });
+  const fromPx = (px: number, py: number) => ({ x: px / sx + xMin, y: yMax - py / sy });
+  const snap = (v: number) => Math.round(v * 2) / 2;
+  const drawMode = p.drawMode || 'none';
+  const maxPoints = Math.max(2, p.maxPoints ?? 6);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const [checkState, setCheckState] = useState<'idle' | 'ok' | 'fail'>('idle');
+
+  // Student-drawn points live in the field as JSON
+  const fieldValue = ctx.fields[p.fieldId] || '[]';
+  const drawn: Array<{ x: number; y: number }> = useMemo(() => {
+    try {
+      const parsed = JSON.parse(fieldValue);
+      return Array.isArray(parsed) ? parsed.filter(pt => typeof pt?.x === 'number' && typeof pt?.y === 'number') : [];
+    } catch { return []; }
+  }, [fieldValue]);
+
+  const setDrawn = (pts: Array<{ x: number; y: number }>) => {
+    ctx.setFieldValue(p.fieldId, JSON.stringify(pts));
+    setCheckState('idle');
+  };
+
+  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (drawMode === 'none' || !svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (W / rect.width);
+    const py = (e.clientY - rect.top) * (H / rect.height);
+    const { x, y } = fromPx(px, py);
+    const pt = { x: snap(x), y: snap(y) };
+    if (pt.x < xMin || pt.x > xMax || pt.y < yMin || pt.y > yMax) return;
+
+    if (drawMode === 'line') {
+      if (drawn.length < 2) {
+        setDrawn([...drawn, pt]);
+      } else {
+        // Move the nearest of the two handles to the click position
+        const d0 = Math.hypot(drawn[0].x - pt.x, drawn[0].y - pt.y);
+        const d1 = Math.hypot(drawn[1].x - pt.x, drawn[1].y - pt.y);
+        const next = [...drawn];
+        next[d0 <= d1 ? 0 : 1] = pt;
+        setDrawn(next);
+      }
+    } else {
+      // points mode: click near an existing point removes it, otherwise add
+      const nearIdx = drawn.findIndex(d => Math.hypot(d.x - pt.x, d.y - pt.y) <= 0.45);
+      if (nearIdx >= 0) setDrawn(drawn.filter((_, i) => i !== nearIdx));
+      else if (drawn.length < maxPoints) setDrawn([...drawn, pt]);
+    }
+  };
+
+  const check = () => {
+    if (!p.expectedExpr) return;
+    if (drawMode === 'line' && drawn.length === 2 && Math.abs(drawn[1].x - drawn[0].x) > 1e-9) {
+      const m = (drawn[1].y - drawn[0].y) / (drawn[1].x - drawn[0].x);
+      const b = drawn[0].y - m * drawn[0].x;
+      let maxDelta = 0;
+      let samples = 0;
+      for (const x of [-4, -2, 0, 2, 4]) {
+        const want = evaluateExpression(p.expectedExpr, { x });
+        if (want === null) continue;
+        samples++;
+        maxDelta = Math.max(maxDelta, Math.abs(m * x + b - want));
+      }
+      setCheckState(samples >= 3 && maxDelta <= 0.35 ? 'ok' : 'fail');
+    } else if (drawMode === 'points' && drawn.length >= Math.min(3, maxPoints)) {
+      const allOk = drawn.every(pt => {
+        const want = evaluateExpression(p.expectedExpr!, { x: pt.x });
+        return want !== null && Math.abs(pt.y - want) <= 0.3;
+      });
+      setCheckState(allOk ? 'ok' : 'fail');
+    } else {
+      setCheckState('fail');
+    }
+  };
+
+  // Plotted curves: sample each function across the width
+  const functionsKey = JSON.stringify(p.functions || []);
+  const curves = useMemo(() => {
+    const fns = JSON.parse(functionsKey) as Array<{ expr: string; label?: string; color?: string }>;
+    const result: Array<{ d: string; color: string; label?: string }> = [];
+    fns.forEach((fn, i) => {
+      let d = '';
+      let penDown = false;
+      for (let px = 0; px <= W; px += 2) {
+        const x = px / sx + xMin;
+        const y = evaluateExpression(fn.expr, { x });
+        if (y === null || y < yMin - (yMax - yMin) || y > yMax + (yMax - yMin)) { penDown = false; continue; }
+        const py = (yMax - y) * sy;
+        d += `${penDown ? 'L' : 'M'} ${px.toFixed(1)} ${py.toFixed(1)} `;
+        penDown = true;
+      }
+      if (d) result.push({ d, color: fn.color || GRAPH_COLORS[i % GRAPH_COLORS.length], label: fn.label });
+    });
+    return result;
+  }, [functionsKey, sx, sy, xMin, yMin, yMax]);
+
+  // Grid and axis geometry
+  const gridLines: React.ReactNode[] = [];
+  const labelStep = Math.max(1, Math.ceil((xMax - xMin) / 20));
+  for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+    const { px } = toPx(x, 0);
+    gridLines.push(<line key={`vx${x}`} x1={px} y1={0} x2={px} y2={H} stroke={x === 0 ? 'var(--text-muted)' : 'var(--border)'} strokeWidth={x === 0 ? 1.5 : 0.5} />);
+    if (x !== 0 && x % labelStep === 0) {
+      gridLines.push(<text key={`tx${x}`} x={px} y={Math.min(H - 4, Math.max(12, toPx(0, 0).py + 14))} textAnchor="middle" fontSize={10} fill="var(--text-muted)">{x}</text>);
+    }
+  }
+  for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+    const { py } = toPx(0, y);
+    gridLines.push(<line key={`hy${y}`} x1={0} y1={py} x2={W} y2={py} stroke={y === 0 ? 'var(--text-muted)' : 'var(--border)'} strokeWidth={y === 0 ? 1.5 : 0.5} />);
+    if (y !== 0 && y % labelStep === 0) {
+      gridLines.push(<text key={`ty${y}`} x={Math.min(W - 4, Math.max(14, toPx(0, 0).px - 6))} y={py + 3} textAnchor="end" fontSize={10} fill="var(--text-muted)">{y}</text>);
+    }
+  }
+
+  // Drawn line (extended across the full view)
+  let drawnLine: React.ReactNode = null;
+  if (drawMode === 'line' && drawn.length === 2) {
+    const [a, b] = drawn;
+    if (Math.abs(b.x - a.x) < 1e-9) {
+      const { px } = toPx(a.x, 0);
+      drawnLine = <line x1={px} y1={0} x2={px} y2={H} stroke="#c026d3" strokeWidth={2} />;
+    } else {
+      const m = (b.y - a.y) / (b.x - a.x);
+      const p1 = toPx(xMin, a.y + m * (xMin - a.x));
+      const p2 = toPx(xMax, a.y + m * (xMax - a.x));
+      drawnLine = <line x1={p1.px} y1={p1.py} x2={p2.px} y2={p2.py} stroke="#c026d3" strokeWidth={2} />;
+    }
+  }
+
+  return (
+    <div key={p.id || p.fieldId} className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3">
+      {p.title && <div className="font-semibold text-sm mb-2 text-[var(--accent-dark)]">{p.title}</div>}
+      {drawMode !== 'none' && (
+        <div className="text-xs text-[var(--text-muted)] mb-2">
+          {drawMode === 'line'
+            ? 'Klicke zwei Punkte ins Koordinatensystem, um die Gerade zu zeichnen. Weitere Klicks verschieben den nächstgelegenen Punkt.'
+            : `Klicke ins Koordinatensystem, um Punkte zu setzen (max. ${maxPoints}). Klick auf einen Punkt entfernt ihn.`}
+        </div>
+      )}
+      <div style={{ overflowX: 'auto' }}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ width: '100%', maxWidth: `${W}px`, background: 'white', borderRadius: '8px', border: '1px solid var(--border)', cursor: drawMode !== 'none' ? 'crosshair' : 'default', touchAction: 'manipulation' }}
+          onClick={handleClick}
+        >
+          {gridLines}
+          {curves.map((c, i) => <path key={i} d={c.d} fill="none" stroke={c.color} strokeWidth={2} />)}
+          {drawnLine}
+          {(p.points || []).map((pt, i) => {
+            const { px, py } = toPx(pt.x, pt.y);
+            return (
+              <g key={`sp${i}`}>
+                <circle cx={px} cy={py} r={4} fill="var(--text)" />
+                {pt.label && <text x={px + 7} y={py - 6} fontSize={11} fill="var(--text)">{pt.label} ({formatNum(pt.x)}|{formatNum(pt.y)})</text>}
+              </g>
+            );
+          })}
+          {drawn.map((pt, i) => {
+            const { px, py } = toPx(pt.x, pt.y);
+            return (
+              <g key={`dp${i}`}>
+                <circle cx={px} cy={py} r={5.5} fill="#c026d3" stroke="white" strokeWidth={1.5} />
+                <text x={px + 8} y={py - 7} fontSize={11} fill="#86198f">({formatNum(pt.x)}|{formatNum(pt.y)})</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap mt-2">
+        {(p.functions || []).map((fn, i) => fn.label && (
+          <span key={i} className="inline-flex items-center gap-1.5 text-xs text-[var(--text)]">
+            <span style={{ width: 14, height: 3, background: fn.color || GRAPH_COLORS[i % GRAPH_COLORS.length], display: 'inline-block', borderRadius: 2 }} />
+            <LatexText text={fn.label} />
+          </span>
+        ))}
+        {drawMode === 'line' && drawn.length === 2 && (
+          <span className="inline-flex items-center gap-1.5 text-xs bg-white border border-[var(--border)] rounded px-2 py-1">
+            Deine Gerade: <Latex tex={lineEquation(drawn[0], drawn[1])} />
+          </span>
+        )}
+      </div>
+
+      {drawMode !== 'none' && (
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          {p.expectedExpr && (
+            <button type="button" onClick={check} className="pixel-solution-btn">Prüfen</button>
+          )}
+          <button type="button" onClick={() => { setDrawn([]); }} className="pixel-reset-btn">Zurücksetzen</button>
+          {checkState === 'ok' && <span className="text-sm font-medium text-[var(--success)]">Richtig gezeichnet!</span>}
+          {checkState === 'fail' && <span className="text-sm font-medium text-[var(--error)]">Noch nicht richtig — vergleiche Steigung und y-Achsenabschnitt.</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function renderPrimitive(p: GenericPrimitive, ctx: WkCtx, index: number): React.ReactNode {
   switch (p.type) {
     case 'display': return renderDisplay(p);
@@ -2408,6 +2720,9 @@ function renderPrimitive(p: GenericPrimitive, ctx: WkCtx, index: number): React.
     case 'flowDiagram': return renderFlowDiagram(p);
     case 'keyValueGrid': return renderKeyValueGrid(p);
     case 'callout': return renderCallout(p);
+    case 'mathInput': return <MathInputC key={p.id || p.fieldId || index} p={p} ctx={ctx} />;
+    case 'mathSteps': return <MathStepsC key={p.id || p.fieldId || index} p={p} ctx={ctx} />;
+    case 'functionGraph': return <FunctionGraphC key={p.id || p.fieldId || index} p={p} ctx={ctx} />;
     default: return null;
   }
 }

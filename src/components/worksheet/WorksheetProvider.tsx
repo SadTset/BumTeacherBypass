@@ -1,20 +1,46 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import { mathEquals } from '@/lib/math-eval';
+
+type CheckOpts = { normalize?: boolean; contains?: boolean; math?: boolean };
 
 interface WorksheetContextValue {
   worksheetKey: string;
   fields: Record<string, string>;
   setFieldValue: (id: string, value: string) => void;
   resetFields: (ids: string[]) => void;
-  checkField: (fieldId: string, expected: string, hint?: string, opts?: { normalize?: boolean; contains?: boolean }) => boolean;
-  checkFields: (checks: Array<{ fieldId: string; expected: string; hint?: string; opts?: { normalize?: boolean; contains?: boolean } }>, feedbackId: string) => void;
+  checkField: (fieldId: string, expected: string, hint?: string, opts?: CheckOpts) => boolean;
+  checkFields: (checks: Array<{ fieldId: string; expected: string; hint?: string; opts?: CheckOpts }>, feedbackId: string) => void;
   feedbacks: Record<string, { type: 'success' | 'error'; msg: string }>;
   toggleHint: (id: string) => void;
   hints: Record<string, boolean>;
 }
 
 const WorksheetContext = createContext<WorksheetContextValue | null>(null);
+
+const normalize = (val: string) => val.trim().toLowerCase().replace(/'/g, '').replace(/\s+/g, ' ');
+
+// String comparison first; when that fails, try mathematical equivalence so
+// 3/4, 0,75 and 75% all count when the expected answer is 0.75. Pure-digit
+// pairs (binary answers like "0101") stay strict unless math is explicitly
+// requested — leading zeros carry meaning there.
+function answersMatch(rawVal: string, rawExp: string, opts?: CheckOpts): boolean {
+  const doNormalize = !opts || opts.normalize !== false;
+  let val = rawVal;
+  let exp = rawExp;
+  if (doNormalize) {
+    val = normalize(val);
+    exp = normalize(exp);
+  }
+  if (opts?.contains === true) return val.includes(exp);
+  if (val === exp) return true;
+  const bothPureDigits = /^\d+$/.test(val) && /^\d+$/.test(exp);
+  if (opts?.math === true || !bothPureDigits) {
+    if (mathEquals(rawExp, rawVal) === true) return true;
+  }
+  return false;
+}
 
 export function useWorksheet() {
   const ctx = useContext(WorksheetContext);
@@ -90,25 +116,15 @@ export function WorksheetProvider({ worksheetKey, children }: { worksheetKey: st
     });
   }, [persist]);
 
-  const normalize = (val: string) => val.trim().toLowerCase().replace(/'/g, '').replace(/\s+/g, ' ');
+  const checkField = useCallback((fieldId: string, expected: string, hint?: string, opts?: CheckOpts) => {
+    const val = fields[fieldId] || '';
 
-  const checkField = useCallback((fieldId: string, expected: string, hint?: string, opts?: { normalize?: boolean; contains?: boolean }) => {
-    const doNormalize = opts?.normalize !== false;
-    const doContains = opts?.contains === true;
-    let val = fields[fieldId] || '';
-    let exp = expected;
-
-    if (doNormalize) {
-      val = normalize(val);
-      exp = normalize(exp);
-    }
-
-    if (!val) {
+    if (!val.trim()) {
       setFeedbacks(prev => ({ ...prev, [fieldId]: { type: 'error', msg: 'Bitte zuerst ausfüllen.' } }));
       return false;
     }
 
-    const correct = doContains ? val.includes(exp) : val === exp;
+    const correct = answersMatch(val, expected, opts);
     if (correct) {
       setFeedbacks(prev => ({ ...prev, [fieldId]: { type: 'success', msg: 'Korrekt!' } }));
     } else {
@@ -117,30 +133,21 @@ export function WorksheetProvider({ worksheetKey, children }: { worksheetKey: st
     return correct;
   }, [fields]);
 
-  const checkFields = useCallback((checks: Array<{ fieldId: string; expected: string; hint?: string; opts?: { normalize?: boolean; contains?: boolean } }>, feedbackId: string) => {
+  const checkFields = useCallback((checks: Array<{ fieldId: string; expected: string; hint?: string; opts?: CheckOpts }>, feedbackId: string) => {
     let allCorrect = true;
     let firstHint = '';
 
     for (const c of checks) {
-      const doNormalize = !c.opts || c.opts.normalize !== false;
-      let val = fields[c.fieldId] || '';
-      let exp = c.expected;
+      const val = fields[c.fieldId] || '';
 
-      if (doNormalize) {
-        val = normalize(val);
-        exp = normalize(exp);
-      }
-
-      const doContains = c.opts?.contains === true;
-
-      if (!val) {
+      if (!val.trim()) {
         allCorrect = false;
         if (!firstHint) firstHint = 'Fülle alle Felder aus.';
         setFeedbacks(prev => ({ ...prev, [c.fieldId]: { type: 'error', msg: '' } }));
         continue;
       }
 
-      const correct = doContains ? val.includes(exp) : val === exp;
+      const correct = answersMatch(val, c.expected, c.opts);
       if (correct) {
         setFeedbacks(prev => ({ ...prev, [c.fieldId]: { type: 'success', msg: '' } }));
       } else {

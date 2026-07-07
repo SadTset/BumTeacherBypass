@@ -1,5 +1,5 @@
 export interface ToolSuggestion {
-  type: 'pixelGrid' | 'bitVisualizer' | 'truthTable' | 'encodingExercise' | 'huffmanTreeBuilder' | 'lz77Simulator' | 'lz78Simulator' | 'compressionTable' | 'xorCalculator' | 'asymmetricFlow' | 'choiceMatrix' | 'dropdownChoice';
+  type: 'pixelGrid' | 'bitVisualizer' | 'truthTable' | 'encodingExercise' | 'huffmanTreeBuilder' | 'lz77Simulator' | 'lz78Simulator' | 'compressionTable' | 'xorCalculator' | 'asymmetricFlow' | 'choiceMatrix' | 'dropdownChoice' | 'mathInput';
   confidence: 'high' | 'medium' | 'low';
   reason: string;
   sectionIndex?: number;
@@ -162,6 +162,19 @@ export function analyzeTextForToolHints(text: string): ToolSuggestion[] {
       type: 'dropdownChoice',
       confidence: 'medium',
       reason: 'Dokument enthält Auswahl-/Zuordnungsaufgaben',
+    });
+  }
+
+  const mathPatterns = [
+    /gleichung|ungleichung|bruch|brüche|bruchrechn|prozent|zins|wurzel|potenz|exponential|logarithm/i,
+    /löse.*nach|berechne.*x|terme?\s|binomische|quadratische|lineare.*funktion/i,
+    /dividier|multiplizier|addier|subtrahier|dezimalzahl|runden?\s/i,
+  ];
+  if (mathPatterns.some(p => p.test(lower))) {
+    suggestions.push({
+      type: 'mathInput',
+      confidence: 'high',
+      reason: 'Dokument enthält Mathematik-Aufgaben (mathInput + mathSteps + Äquivalenz-Bewertung verwenden)',
     });
   }
 

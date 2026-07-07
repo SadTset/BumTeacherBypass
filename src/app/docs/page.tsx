@@ -111,7 +111,7 @@ export default function DocsPage() {
             <li><strong>Prüfen:</strong> Antwort eintippen, „Prüfen“ klicken — richtig/falsch mit Hinweis. Eingaben werden automatisch gespeichert.</li>
             <li><strong>Simulatoren:</strong> LZ77/LZ78/LZW, Huffman-Bäume, XOR-Rechner, Wahrheitstabellen, Pixel-Grids, Zahlensystem-Umrechner u.&nbsp;v.&nbsp;m. — plus frei zusammengesetzte Komponenten, wenn nichts Vorgefertigtes passt.</li>
             <li><strong>Tipps:</strong> „Tipp anzeigen“ gibt einen Hinweis, ohne die Lösung zu verraten.</li>
-            <li><strong>Mathematik:</strong> Formeln werden als echtes LaTeX gerendert — in Aufgaben, Tabellen und im Kompendium.</li>
+            <li><strong>Mathematik:</strong> Formeln werden als echtes LaTeX gerendert — in Aufgaben, Tabellen und im Kompendium. Antworten tippst du als <code className="font-mono text-xs bg-[var(--accent-light)] px-1 py-0.5 rounded">3/4</code>, <code className="font-mono text-xs bg-[var(--accent-light)] px-1 py-0.5 rounded">x^2</code> oder <code className="font-mono text-xs bg-[var(--accent-light)] px-1 py-0.5 rounded">sqrt(2)</code> und siehst live die gerenderte Formel. Bewertet wird nach mathematischer Gleichwertigkeit: 0,75, 3/4 und 75&nbsp;% zählen alle als richtig. Der „Rechenweg“-Block ersetzt das Rechnen auf Papier.</li>
             <li><strong>Neu erstellen:</strong> Generiert die Seite komplett neu (z.&nbsp;B. mit einem besseren Modell). Ältere Fassungen bleiben unter „Versionen“ abrufbar.</li>
             <li><strong>Exportieren / Original:</strong> Das Arbeitsblatt als Datei exportieren oder das Quelldokument ansehen.</li>
           </ul>

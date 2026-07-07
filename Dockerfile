@@ -36,7 +36,9 @@ COPY --from=builder /app/.next/static ./.next/static
 RUN mkdir -p /app/data/uploads && chown -R nextjs:nodejs /app/data
 
 COPY --chown=nextjs:nodejs docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+# Strip CRLF in case the file was checked out on Windows (autocrlf) — a \r in
+# the shebang makes Alpine report the script as missing at container start.
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 3847
 
