@@ -6,6 +6,7 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  turbopack: {},
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = [...(config.externals || []), 'better-sqlite3', '@napi-rs/canvas'];

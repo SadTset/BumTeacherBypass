@@ -317,7 +317,7 @@ export default function CompendiumDetailPage() {
   return (
     <>
       {regenerating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--card)]/80 backdrop-blur-sm">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)] mx-auto mb-4"/>
             <h2 className="font-serif text-2xl font-bold mb-2">Eintrag wird neu erstellt</h2>
@@ -341,7 +341,7 @@ export default function CompendiumDetailPage() {
         <span className="text-[var(--text)]">{entry.title}</span>
       </nav>
 
-      <div className="bg-white border border-[var(--border)] rounded-xl p-6 shadow-sm mb-6">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-6">
         <div className="flex flex-wrap items-center gap-2 mb-4">
           {entry.module_number && (
             <span className="bg-[var(--accent)] text-white px-2 py-0.5 rounded text-xs font-mono font-semibold">
@@ -417,7 +417,7 @@ export default function CompendiumDetailPage() {
       </div>
 
       {entry.source_doc_ids && (
-        <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm mb-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 mb-6">
           <h3 className="font-mono text-xs tracking-wider uppercase text-[var(--text-muted)] mb-2">Quelldokumente</h3>
           <div className="flex flex-wrap gap-2">
             {String(entry.source_doc_ids).split(',').filter(Boolean).map(docId => (
@@ -430,7 +430,7 @@ export default function CompendiumDetailPage() {
       )}
 
       {entry.related && entry.related.length > 0 && (
-        <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4">
           <h3 className="font-mono text-xs tracking-wider uppercase text-[var(--text-muted)] mb-3">Verwandte Einträge</h3>
           <div className="flex flex-col gap-2">
             {entry.related.map(r => (

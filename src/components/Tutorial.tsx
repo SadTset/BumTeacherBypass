@@ -10,7 +10,7 @@ export function TutorialStartButton({ className }: { className?: string }) {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))}
-      className={className || 'inline-flex items-center gap-2 bg-[var(--accent)] text-white px-4 py-2 rounded-lg font-medium hover:bg-[var(--accent-dark)] transition-colors border-none cursor-pointer'}
+      className={className || 'inline-flex items-center gap-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white px-4 py-2 rounded-lg font-medium shadow-md shadow-[var(--accent-glow)] hover:bg-[var(--accent-dark)] transition-colors border-none cursor-pointer'}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21"/></svg>
       Tutorial starten
@@ -133,7 +133,7 @@ export function Tutorial() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Tutorial">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--card)] rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 sm:p-8">
           <div className="flex items-start justify-between mb-4">
             <div className="w-12 h-12 rounded-xl bg-[var(--accent-light)] flex items-center justify-center text-2xl" aria-hidden="true">
@@ -205,7 +205,7 @@ export function Tutorial() {
             <button
               type="button"
               onClick={() => (isLast ? close() : setStep(step + 1))}
-              className="px-4 py-1.5 text-sm bg-[var(--accent)] text-white rounded-lg border-none cursor-pointer font-medium hover:bg-[var(--accent-dark)] transition-colors"
+              className="px-4 py-1.5 text-sm bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white rounded-lg border-none cursor-pointer font-medium shadow-md shadow-[var(--accent-glow)] hover:bg-[var(--accent-dark)] transition-colors"
             >
               {isLast ? 'Los geht’s!' : 'Weiter'}
             </button>

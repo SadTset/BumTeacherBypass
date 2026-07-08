@@ -45,8 +45,6 @@ const ROLES: Array<{ key: keyof AppSettings; label: string; description: string;
   { key: 'lightweightProviderId', label: 'Klassifizierung', description: 'Kleine Aufgaben wie die automatische Kategorisierung', allowDefault: true },
 ];
 
-// ─── Small building blocks ───
-
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -54,7 +52,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors border-none cursor-pointer ${checked ? 'bg-[var(--accent)]' : 'bg-gray-300'}`}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors border-none cursor-pointer ${checked ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`}
     >
       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
     </button>
@@ -77,7 +75,6 @@ function LoadModelsButton({ type, apiKey, baseUrl, onLoaded }: {
   const [error, setError] = useState('');
   const [count, setCount] = useState<number | null>(null);
 
-  // Reset feedback when the target provider changes
   useEffect(() => { setError(''); setCount(null); }, [type, apiKey, baseUrl]);
 
   const load = async () => {
@@ -117,12 +114,10 @@ function LoadModelsButton({ type, apiKey, baseUrl, onLoaded }: {
         Modelle laden
       </button>
       {count !== null && !error && <span className="text-xs text-[var(--success)] truncate">{count} Modelle geladen</span>}
-      {error && <span className="text-xs text-red-500 truncate" title={error}>{error}</span>}
+      {error && <span className="text-xs text-[var(--error)] truncate" title={error}>{error}</span>}
     </div>
   );
 }
-
-// ─── Provider add/edit modal ───
 
 interface ProviderDraft {
   name: string;
@@ -153,8 +148,6 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
 
   const set = (patch: Partial<ProviderDraft>) => setDraft(d => ({ ...d, ...patch }));
 
-  // Switching the type resets everything type-specific so nothing bleeds over
-  // from the previously selected provider (URL, model, key, custom models).
   const switchType = (type: ProviderType) => {
     if (type === draft.type) return;
     set({
@@ -175,11 +168,11 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
     && (!meta.needsApiKey || draft.api_key.trim().length > 0)
     && draft.model.trim().length > 0;
 
-  const inputCls = 'w-full px-3.5 py-2.5 border border-[var(--border)] rounded-lg bg-[var(--input-bg)] text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)] transition-all';
+  const inputCls = 'w-full px-3.5 py-2.5 border border-[var(--border)] rounded-xl bg-[var(--input-bg)] text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-glow)] transition-all text-[var(--text)]';
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" role="dialog" aria-modal="true">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
+      <div className="bg-[var(--card)] rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-[var(--border)]">
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between shrink-0">
           <h2 className="font-serif text-lg font-bold">{mode === 'add' ? 'Anbieter hinzufügen' : 'Anbieter bearbeiten'}</h2>
           <button type="button" onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)] bg-transparent border-none cursor-pointer p-1" aria-label="Schließen">
@@ -188,7 +181,6 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
         </div>
 
         <div className="p-6 space-y-5 overflow-y-auto">
-          {/* Type */}
           <div>
             <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Anbieter-Typ</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -200,7 +192,7 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
                     key={key}
                     type="button"
                     onClick={() => switchType(key)}
-                    className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${active ? 'border-[var(--accent)] bg-[var(--accent-light)]' : 'border-[var(--border)] hover:border-[var(--accent)] bg-white'}`}
+                    className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${active ? 'border-[var(--accent)] bg-[var(--accent-light)]' : 'border-[var(--border)] hover:border-[var(--accent)] bg-[var(--surface)]'}`}
                   >
                     <div className="font-semibold text-sm">{info.label}</div>
                     <div className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{info.description}</div>
@@ -210,13 +202,11 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
             </div>
           </div>
 
-          {/* Name */}
           <div>
             <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Name</label>
             <input type="text" value={draft.name} onChange={e => set({ name: e.target.value })} placeholder={`z.B. ${meta.label}`} className={inputCls} />
           </div>
 
-          {/* API key */}
           {meta.needsApiKey && (
             <div>
               <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">API-Schlüssel</label>
@@ -236,14 +226,12 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
             </div>
           )}
 
-          {/* Base URL */}
           <div>
             <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Basis-URL</label>
             <input type="url" value={draft.base_url} onChange={e => set({ base_url: e.target.value })} className={`${inputCls} font-mono`} />
             {meta.urlHint && <p className="text-xs text-[var(--text-muted)] mt-1.5 break-words">{meta.urlHint}</p>}
           </div>
 
-          {/* Model */}
           <div>
             <div className="flex items-center justify-between gap-3 mb-1.5">
               <label className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider shrink-0">Modell</label>
@@ -279,19 +267,19 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
           </div>
 
           {error && (
-            <div className="p-3 bg-[var(--error-bg)] text-[var(--error)] rounded-lg text-sm break-words">{error}</div>
+            <div className="p-3 bg-[var(--error-bg)] text-[var(--error)] rounded-xl text-sm break-words border border-[var(--error)]/20">{error}</div>
           )}
         </div>
 
         <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3 shrink-0">
-          <button type="button" onClick={onClose} className="flex-1 bg-white border border-[var(--border)] text-[var(--text)] px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors cursor-pointer">
+          <button type="button" onClick={onClose} className="flex-1 bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] px-5 py-2.5 rounded-xl font-semibold hover:bg-[var(--card-hover)] transition-colors cursor-pointer">
             Abbrechen
           </button>
           <button
             type="button"
             onClick={() => onSave(draft)}
             disabled={saving || !valid}
-            className="flex-1 flex items-center justify-center gap-2 bg-[var(--accent)] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[var(--accent-dark)] transition-colors disabled:opacity-50 cursor-pointer border-none"
+            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-40 cursor-pointer border-none shadow-md shadow-[var(--accent-glow)]"
           >
             {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"/>}
             {mode === 'add' ? 'Anbieter erstellen' : 'Speichern'}
@@ -301,8 +289,6 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
     </div>
   );
 }
-
-// ─── Provider card ───
 
 function ProviderCard({ provider, isDefault, testing, testResult, deleting, onTest, onEdit, onDelete }: {
   provider: ProviderRow;
@@ -337,21 +323,19 @@ function ProviderCard({ provider, isDefault, testing, testResult, deleting, onTe
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <button onClick={onTest} disabled={testing} className="text-xs bg-white border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg font-semibold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors disabled:opacity-50 cursor-pointer">
+        <button onClick={onTest} disabled={testing} className="text-xs bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg font-semibold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors disabled:opacity-50 cursor-pointer">
           {testing ? 'Teste…' : 'Testen'}
         </button>
-        <button onClick={onEdit} className="text-xs bg-white border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg font-semibold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors cursor-pointer">
+        <button onClick={onEdit} className="text-xs bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg font-semibold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors cursor-pointer">
           Bearbeiten
         </button>
-        <button onClick={onDelete} disabled={deleting} className="text-xs text-red-500 border border-red-200 bg-white px-3 py-1.5 rounded-lg font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer">
+        <button onClick={onDelete} disabled={deleting} className="text-xs text-[var(--error)] border border-[var(--error)]/30 bg-[var(--surface)] px-3 py-1.5 rounded-lg font-semibold hover:bg-[var(--error-bg)] transition-colors disabled:opacity-50 cursor-pointer">
           {deleting ? 'Lösche…' : 'Löschen'}
         </button>
       </div>
     </div>
   );
 }
-
-// ─── Role select ───
 
 function providerModelValue(providerId: string, model: string): string {
   return `${providerId}:${model}`;
@@ -378,7 +362,7 @@ function RoleSelect({ label, description, value, providers, onChange, allowDefau
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--input-bg)] text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)] transition-all"
+        className="w-full px-3 py-2 border border-[var(--border)] rounded-xl bg-[var(--input-bg)] text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-glow)] transition-all text-[var(--text)]"
       >
         {allowDefault && <option value="">— Standard-Anbieter —</option>}
         {providers.map(p => {
@@ -397,8 +381,6 @@ function RoleSelect({ label, description, value, providers, onChange, allowDefau
     </div>
   );
 }
-
-// ─── Page ───
 
 export default function SettingsPage() {
   const [providers, setProviders] = useState<ProviderRow[]>([]);
@@ -478,7 +460,6 @@ export default function SettingsPage() {
         setModalError(data.error || 'Fehler beim Speichern');
         return;
       }
-      // First provider automatically becomes the default
       if (isAdd && (providers.length === 0 || !settings?.defaultProviderId)) {
         await fetch('/api/settings', {
           method: 'PUT',
@@ -509,8 +490,8 @@ export default function SettingsPage() {
   const handleDeleteProvider = async (provider: ProviderRow) => {
     const used = rolesUsingProvider(provider.id);
     const warning = used.length > 0
-      ? `„${provider.name}“ wird von folgenden Rollen verwendet: ${used.join(', ')}.\n\nTrotzdem löschen? Die Rollen fallen dann auf den Standard-Anbieter zurück.`
-      : `Anbieter „${provider.name}“ wirklich löschen?`;
+      ? `„${provider.name}" wird von folgenden Rollen verwendet: ${used.join(', ')}.\n\nTrotzdem löschen? Die Rollen fallen dann auf den Standard-Anbieter zurück.`
+      : `Anbieter „${provider.name}" wirklich löschen?`;
     if (!confirm(warning)) return;
     setDeleting(provider.id);
     try {
@@ -587,14 +568,13 @@ export default function SettingsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-[var(--error-bg)] text-[var(--error)] rounded-lg text-sm font-medium break-words">{error}</div>
+        <div className="mb-4 p-3 bg-[var(--error-bg)] text-[var(--error)] rounded-xl text-sm font-medium break-words border border-[var(--error)]/20">{error}</div>
       )}
       {saved && (
-        <div className="mb-4 p-3 bg-[var(--success-bg)] text-[var(--success)] rounded-lg text-sm font-medium">Gespeichert!</div>
+        <div className="mb-4 p-3 bg-[var(--success-bg)] text-[var(--success)] rounded-xl text-sm font-medium border border-[var(--success)]/20">Gespeichert!</div>
       )}
 
-      {/* ── Providers ── */}
-      <section className="bg-white border border-[var(--border)] rounded-xl shadow-sm mb-6 overflow-hidden">
+      <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl mb-6 overflow-hidden">
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold text-base">KI-Anbieter</h2>
@@ -602,7 +582,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={() => { setModalError(null); setModal({ mode: 'add' }); }}
-            className="shrink-0 inline-flex items-center gap-1.5 bg-[var(--accent)] text-white px-3.5 py-2 rounded-lg text-sm font-semibold hover:bg-[var(--accent-dark)] transition-colors border-none cursor-pointer"
+            className="shrink-0 inline-flex items-center gap-1.5 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white px-3.5 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition-all border-none cursor-pointer shadow-md shadow-[var(--accent-glow)]"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Hinzufügen
@@ -633,8 +613,7 @@ export default function SettingsPage() {
         )}
       </section>
 
-      {/* ── Roles ── */}
-      <section className="bg-white border border-[var(--border)] rounded-xl shadow-sm mb-6">
+      <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl mb-6">
         <div className="px-6 py-4 border-b border-[var(--border)]">
           <h2 className="font-semibold text-base">Modell-Rollen</h2>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">Welches Modell übernimmt welchen Schritt der Verarbeitung. Rollen ohne Auswahl nutzen den Standard.</p>
@@ -658,8 +637,7 @@ export default function SettingsPage() {
         )}
       </section>
 
-      {/* ── Processing options ── */}
-      <section className="bg-white border border-[var(--border)] rounded-xl shadow-sm mb-6">
+      <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl mb-6">
         <div className="px-6 py-4 border-b border-[var(--border)]">
           <h2 className="font-semibold text-base">Verarbeitung</h2>
         </div>
@@ -681,28 +659,27 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <div className="p-4 bg-[var(--accent-light)] rounded-xl text-sm text-[var(--accent-dark)] leading-relaxed">
+      <div className="p-4 bg-[var(--accent-light)] rounded-2xl text-sm text-[var(--accent-dark)] leading-relaxed border border-[var(--accent)]/20">
         <strong>Tipp:</strong> Die Anreicherung (Pass 2) hat den grössten Einfluss auf die Qualität der Arbeitsblätter —
         dort lohnt sich das stärkste Modell. Details in der <a href="/docs" className="underline text-[var(--accent-dark)]">Dokumentation</a>.
       </div>
 
-      {/* Sticky save bar */}
       {hasUnsavedChanges && (
         <div className="fixed bottom-4 left-4 right-4 z-40 max-w-3xl mx-auto">
-          <div className="bg-white border border-[var(--border)] rounded-xl shadow-lg p-4 flex items-center justify-between gap-3">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-2xl p-4 flex items-center justify-between gap-3 backdrop-blur-xl">
             <span className="text-sm font-medium">Ungespeicherte Änderungen</span>
             <div className="flex items-center gap-3 shrink-0">
               <button
                 onClick={() => setDraftSettings(settings)}
                 disabled={settingsSaving}
-                className="px-4 py-2 border border-[var(--border)] rounded-lg text-sm font-semibold text-[var(--text-muted)] hover:border-[var(--text-muted)] hover:text-[var(--text)] transition-colors bg-transparent cursor-pointer"
+                className="px-4 py-2 border border-[var(--border)] rounded-xl text-sm font-semibold text-[var(--text-muted)] hover:border-[var(--text-muted)] hover:text-[var(--text)] transition-colors bg-transparent cursor-pointer"
               >
                 Verwerfen
               </button>
               <button
                 onClick={handleSaveSettings}
                 disabled={settingsSaving}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--accent-dark)] transition-colors border-none cursor-pointer disabled:opacity-60"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all border-none cursor-pointer disabled:opacity-60 shadow-md shadow-[var(--accent-glow)]"
               >
                 {settingsSaving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />}
                 {settingsSaving ? 'Speichern…' : 'Speichern'}
