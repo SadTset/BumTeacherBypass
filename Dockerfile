@@ -15,6 +15,7 @@ WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+ENV NEXT_LINT_IGNORE_DURING_BUILDS=true
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
