@@ -7,7 +7,7 @@ RUN apk add --no-cache python3 make g++
 # Quiet, reproducible install — no update banners or audit noise in build logs
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 COPY package.json package-lock.json* ./
-RUN npm ci --no-audit --no-fund
+RUN npm ci --legacy-peer-deps --no-audit --no-fund
 
 # ── Stage 2: Build ──
 FROM node:20-alpine AS builder
