@@ -18,7 +18,7 @@ ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build
+RUN npm run build -- --webpack
 
 # ── Stage 3: Runtime ──
 FROM node:20-alpine AS runner
