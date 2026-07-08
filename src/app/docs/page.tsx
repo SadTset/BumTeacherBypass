@@ -6,7 +6,7 @@ export const metadata = {
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="bg-white border border-[var(--border)] rounded-xl p-6 shadow-sm scroll-mt-20">
+    <section id={id} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 scroll-mt-20">
       <h2 className="font-serif text-xl font-bold mb-3 text-[var(--accent-dark)]">{title}</h2>
       <div className="text-sm leading-relaxed text-[var(--text)] space-y-3">{children}</div>
     </section>
@@ -34,7 +34,7 @@ export default function DocsPage() {
         <TutorialStartButton />
       </div>
 
-      <nav className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm mb-6 flex flex-wrap gap-x-4 gap-y-1">
+      <nav className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 mb-6 flex flex-wrap gap-x-4 gap-y-1">
         {TOC.map(t => (
           <a key={t.id} href={`#${t.id}`} className="text-sm text-[var(--accent)] no-underline hover:underline">{t.label}</a>
         ))}

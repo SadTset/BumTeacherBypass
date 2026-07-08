@@ -73,11 +73,11 @@ export default function CompendiumPage() {
           placeholder="Kompendium durchsuchen..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 border border-[var(--border)] rounded-xl bg-white text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)] transition-all"
+          className="w-full px-4 py-3 border border-[var(--border)] rounded-2xl bg-[var(--card)] text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-glow)] transition-all"
         />
       </div>
 
-      {loading && <div className="animate-pulse h-12 bg-gray-100 rounded-xl" />}
+      {loading && <div className="animate-pulse h-12 bg-[var(--card)] rounded-2xl" />}
 
       {!loading && Object.keys(grouped).length === 0 && (
         <div className="text-center py-12 text-[var(--text-muted)]">
@@ -118,7 +118,7 @@ export default function CompendiumPage() {
                   <Link
                     key={entry.id}
                     href={`/compendium/${entry.id}`}
-                    className="flex items-center gap-3 bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm hover:border-[var(--accent)] hover:shadow-md transition-all no-underline text-[var(--text)]"
+                    className="flex items-center gap-3 bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 hover:border-[var(--accent)] hover:bg-[var(--card-hover)] transition-all no-underline text-[var(--text)]"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--accent-dark)] shrink-0">
                       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>

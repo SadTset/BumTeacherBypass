@@ -36,7 +36,7 @@ function Card({ href, icon, label, sublabel, rightIcon }: { href: string; icon: 
   return (
     <Link
       href={href}
-      className="flex items-center gap-4 bg-white border border-[var(--border)] rounded-xl p-5 shadow-sm hover:border-[var(--accent)] hover:shadow-md transition-all no-underline text-[var(--text)]"
+      className="flex items-center gap-4 bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent)] hover:bg-[var(--card-hover)] transition-all no-underline text-[var(--text)]"
     >
       <div className="flex-shrink-0 w-9 h-9 bg-[var(--accent-light)] rounded-lg flex items-center justify-center text-[var(--accent-dark)]">
         {icon}
@@ -133,12 +133,12 @@ function YearSelectPage() {
         ))}
       </div>
 
-      <div className="mt-12 p-6 bg-[var(--accent-light)] rounded-xl text-center">
+      <div className="mt-12 p-6 bg-[var(--accent-light)] rounded-2xl text-center">
         <h2 className="font-serif text-xl font-bold text-[var(--accent-dark)] mb-2">Eigene Dokumente hochladen</h2>
         <p className="text-[var(--accent-dark)] text-sm mb-4">Lade PDF- oder Word-Dateien hoch und lass sie von der KI in interaktive, bearbeitbare Seiten umwandeln.</p>
         <Link
           href="/?upload=1"
-          className="inline-flex items-center gap-2 bg-[var(--accent)] text-white px-5 py-2.5 rounded-lg font-medium no-underline hover:bg-[var(--accent-dark)] transition-colors"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white px-5 py-2.5 rounded-lg font-medium no-underline shadow-md shadow-[var(--accent-glow)] hover:bg-[var(--accent-dark)] transition-colors"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
@@ -211,7 +211,7 @@ function ModuleSelectPage({ year, semester }: { year: string; semester: string }
         <p className="text-[var(--text-muted)]">Wähle ein Modul.</p>
       </div>
 
-      {loading && <div className="animate-pulse h-12 bg-gray-100 rounded-xl" />}
+        {loading && <div className="animate-pulse h-12 bg-[var(--card)] rounded-2xl" />}
 
       {!loading && moduleNumbers.length === 0 && (
         <div className="text-center py-12 text-[var(--text-muted)]">
@@ -257,7 +257,7 @@ function TopicSelectPage({ year, semester, moduleNumber }: { year: string; semes
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        <div className="animate-pulse h-12 bg-gray-100 rounded-xl" />
+        <div className="animate-pulse h-12 bg-[var(--card)] rounded-2xl" />
       </div>
     );
   }
@@ -327,7 +327,7 @@ function WorksheetListPage({ year, semester, moduleNumber, topic }: { year: stri
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        <div className="animate-pulse h-12 bg-gray-100 rounded-xl" />
+        <div className="animate-pulse h-12 bg-[var(--card)] rounded-2xl" />
       </div>
     );
   }
@@ -359,7 +359,7 @@ function WorksheetListPage({ year, semester, moduleNumber, topic }: { year: stri
         {docs.map(doc => (
           <div
             key={doc.id}
-            className="flex items-center gap-4 bg-white border border-[var(--border)] rounded-xl p-5 shadow-sm hover:border-[var(--accent)] hover:shadow-md transition-all"
+            className="flex items-center gap-4 bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent)] hover:bg-[var(--card-hover)] transition-all"
           >
             <Link href={`/documents/${doc.id}`} className="flex items-center gap-4 flex-1 min-w-0 no-underline text-[var(--text)]">
               <div className="flex-shrink-0 w-9 h-9 bg-[var(--accent-light)] rounded-lg flex items-center justify-center text-[var(--accent-dark)]">
@@ -381,10 +381,10 @@ function WorksheetListPage({ year, semester, moduleNumber, topic }: { year: stri
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             </Link>
-            <Link href={`/documents/${doc.id}#category`} className="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-100 text-[var(--text-muted)] hover:text-[var(--accent)] no-underline" title="Kategorie bearbeiten">
+            <Link href={`/documents/${doc.id}#category`} className="flex-shrink-0 p-1.5 rounded-lg hover:bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] no-underline" title="Kategorie bearbeiten">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </Link>
-            <button onClick={() => handleDelete(doc.id)} disabled={deleting === doc.id} className="flex-shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-[var(--text-muted)] hover:text-red-500 border-none bg-transparent cursor-pointer transition-colors" title="Löschen">
+            <button onClick={() => handleDelete(doc.id)} disabled={deleting === doc.id} className="flex-shrink-0 p-1.5 rounded-lg hover:bg-[var(--error-bg)] text-[var(--text-muted)] hover:text-[var(--error)] border-none bg-transparent cursor-pointer transition-colors" title="Löschen">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>

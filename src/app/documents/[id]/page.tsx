@@ -205,7 +205,7 @@ function ProcessingTimingsCard({ timings }: { timings: Record<string, number> })
   };
 
   return (
-    <div className="bg-white border border-[var(--border)] rounded-xl shadow-sm mb-6 overflow-hidden">
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl mb-6 overflow-hidden">
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="w-full flex items-center justify-between p-5 hover:bg-[var(--surface)] transition-colors border-none cursor-pointer bg-transparent"
@@ -375,7 +375,7 @@ export default function DocumentDetailPage() {
   if (error || !data) {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 text-center">
-        <div className="bg-red-50 text-red-800 rounded-xl p-8">
+        <div className="bg-[var(--error-bg)] text-[var(--error)] rounded-2xl p-8">
           <p className="text-lg font-semibold mb-2">Fehler</p>
           <p>{error || 'Dokument nicht gefunden'}</p>
           <a href="/" className="inline-block mt-4 text-[var(--accent)] underline">Zur Startseite</a>
@@ -395,11 +395,11 @@ export default function DocumentDetailPage() {
   if (doc.status === 'error') {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 text-center">
-        <div className="bg-red-50 text-red-800 rounded-xl p-8">
+        <div className="bg-[var(--error-bg)] text-[var(--error)] rounded-2xl p-8">
           <p className="text-lg font-semibold mb-2">Verarbeitung fehlgeschlagen</p>
-          <p className="text-red-700">Beim Verarbeiten des Dokuments ist ein Fehler aufgetreten. Bitte überprüfe deine KI-Anbieter-Einstellungen und versuche es erneut.</p>
+          <p className="text-[var(--error)]">Beim Verarbeiten des Dokuments ist ein Fehler aufgetreten. Bitte überprüfe deine KI-Anbieter-Einstellungen und versuche es erneut.</p>
           <div className="flex gap-3 justify-center mt-4">
-            <a href="/settings" className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg no-underline hover:bg-[var(--accent-dark)]">Einstellungen</a>
+            <a href="/settings" className="px-4 py-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white rounded-lg no-underline shadow-md shadow-[var(--accent-glow)]">Einstellungen</a>
             <a href="/" className="px-4 py-2 border border-[var(--border)] rounded-lg no-underline text-[var(--text-muted)] hover:text-[var(--text)]">Startseite</a>
           </div>
         </div>
@@ -410,9 +410,9 @@ export default function DocumentDetailPage() {
   if (pages.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 text-center">
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-8">
-          <p className="text-lg font-semibold text-amber-800 mb-2">Keine Seiten extrahiert</p>
-          <p className="text-amber-700">Das Dokument könnte leer sein oder der Inhalt konnte nicht gelesen werden.</p>
+        <div className="bg-[var(--accent-light)] border border-[var(--accent)]/20 rounded-2xl p-8">
+          <p className="text-lg font-semibold text-[var(--accent-dark)] mb-2">Keine Seiten extrahiert</p>
+          <p className="text-[var(--accent-dark)]">Das Dokument könnte leer sein oder der Inhalt konnte nicht gelesen werden.</p>
         </div>
       </div>
     );
@@ -435,7 +435,7 @@ export default function DocumentDetailPage() {
   return (
     <>
       {isRegenerating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--card)]/80 backdrop-blur-sm">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)] mx-auto mb-4"/>
             <h2 className="font-serif text-2xl font-bold mb-2">Arbeitsblatt wird neu erstellt</h2>
@@ -457,7 +457,7 @@ export default function DocumentDetailPage() {
                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activePage === page.id
                     ? 'bg-[var(--accent)] text-white'
-                    : 'bg-white border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)]'
+                    : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)]'
                 }`}
               >
                 <div className="font-mono text-xs opacity-60">Seite {page.page_number}</div>
@@ -469,7 +469,7 @@ export default function DocumentDetailPage() {
       )}
 
       {/* Category editor */}
-      <div className="mb-6 bg-white border border-[var(--border)] rounded-xl p-4" id="category">
+      <div className="mb-6 bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4" id="category">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <div className="font-serif text-lg font-bold break-all">{doc.filename}</div>
@@ -496,7 +496,7 @@ export default function DocumentDetailPage() {
             <a
               href={`/documents/${id}/export`}
               target="_blank"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent)] text-white rounded-lg no-underline text-sm font-medium hover:bg-[var(--accent-dark)] transition-colors"
+               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white rounded-lg no-underline text-sm font-medium shadow-md shadow-[var(--accent-glow)] hover:bg-[var(--accent-dark)] transition-colors"
               title="Arbeitsblatt mit deinen Antworten als druckbares PDF exportieren"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -538,7 +538,7 @@ export default function DocumentDetailPage() {
               {versions.map(v => {
                 const pwd = parseWorksheetData(v.worksheet_data);
                 return (
-                  <div key={v.id} className="flex items-center justify-between gap-2 p-2 bg-white rounded-md border border-[var(--border)]">
+                  <div key={v.id} className="flex items-center justify-between gap-2 p-2 bg-[var(--card)] rounded-md border border-[var(--border)]">
                     <div className="text-sm">
                       <span className="font-medium">Version {v.version}</span>
                       <span className="text-[var(--text-muted)] ml-2 text-xs">{pwd?.title || v.title}</span>
@@ -560,7 +560,7 @@ export default function DocumentDetailPage() {
           <div className="mt-4">
             <CategorySelector year={year} semester={semester} moduleNumber={moduleNumber} topic={topic} onYearChange={setYear} onSemesterChange={setSemester} onModuleNumberChange={setModuleNumber} onTopicChange={setTopic} />
             <div className="flex justify-end mt-3">
-              <button onClick={saveCategory} className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--accent-dark)] transition-colors">
+              <button onClick={saveCategory} className="px-4 py-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white rounded-lg text-sm font-semibold shadow-md shadow-[var(--accent-glow)] hover:bg-[var(--accent-dark)] transition-colors">
                 Kategorie speichern
               </button>
             </div>
@@ -579,7 +579,7 @@ export default function DocumentDetailPage() {
           breadcrumbItems={breadcrumbItems}
         />
       ) : (
-        <div className="bg-white border border-[var(--border)] rounded-xl p-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="font-mono text-xs tracking-wider uppercase text-[var(--accent)] mb-1">
@@ -601,7 +601,7 @@ export default function DocumentDetailPage() {
             </button>
           </div>
           <div className="prose max-w-none text-[var(--text)]" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPage.content) }} />
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+          <div className="mt-6 p-4 bg-[var(--accent-light)] border border-[var(--accent)]/20 rounded-lg text-sm text-[var(--accent-dark)]">
             Diese Seite konnte nicht in ein interaktives Arbeitsblatt umgewandelt werden. Klicke auf Neu erstellen, um es erneut mit KI zu versuchen.
           </div>
         </div>
