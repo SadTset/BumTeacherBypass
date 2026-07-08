@@ -189,25 +189,69 @@ export default function HomePage() {
     setYear(''); setSemester(''); setModuleNumber(''); setTopic('');
   };
 
-  return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-end justify-between gap-4 mb-6 pt-2">
-        <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-[var(--text)]">Arbeitsblätter</h1>
-        <Link href="/compendium" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] no-underline hover:underline">
-          Kompendium öffnen
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </Link>
-      </div>
+  const readyCount = recentDocs.filter(doc => doc.status === 'processed').length;
+  const processingCount = recentDocs.filter(doc => doc.status === 'processing').length;
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
-        {[1, 2, 3, 4].map(y => (
-          <Link key={y} href={`/worksheets/year-${y}`} className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 no-underline text-[var(--text)] hover:border-[var(--accent)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-light)] text-[var(--accent-dark)] font-extrabold text-sm transition-transform group-hover:scale-110">{y}</span>
-            <span className="text-sm font-semibold">Lehrjahr</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"><polyline points="9 18 15 12 9 6"/></svg>
-          </Link>
-        ))}
-      </div>
+  return (
+    <div className="min-h-screen px-4 py-5 sm:px-6 lg:px-8 lg:py-8 text-[var(--text)]">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-6 overflow-hidden rounded-[2rem] border border-white/10 bg-[#16201d] text-white shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
+            <div>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/[0.15] bg-white/[0.08] px-3 py-1 text-xs font-semibold text-[#f8e7b0]">
+                <span className="h-2 w-2 rounded-full bg-[#facc15]" />
+                Interaktive Arbeitsblätter
+              </div>
+              <h1 className="max-w-3xl font-serif text-3xl font-extrabold leading-tight text-white sm:text-5xl">
+                Dokumente rein, Übungsoberfläche raus.
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#c7d5cf] sm:text-base">
+                Lade PDFs oder Word-Dateien hoch, lass sie strukturieren und arbeite direkt mit den generierten Aufgaben weiter.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/[0.12] bg-white/[0.08] p-2">
+              <div className="rounded-xl bg-white/10 px-3 py-3">
+                <div className="text-2xl font-extrabold">{recentDocs.length}</div>
+                <div className="text-[0.72rem] font-medium text-[#c7d5cf]">zuletzt</div>
+              </div>
+              <div className="rounded-xl bg-white/10 px-3 py-3">
+                <div className="text-2xl font-extrabold">{readyCount}</div>
+                <div className="text-[0.72rem] font-medium text-[#c7d5cf]">bereit</div>
+              </div>
+              <div className="rounded-xl bg-white/10 px-3 py-3">
+                <div className="text-2xl font-extrabold">{processingCount}</div>
+                <div className="text-[0.72rem] font-medium text-[#c7d5cf]">aktiv</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)]">
+          <div className="space-y-5">
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.14)] sm:p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold">Bibliothek</h2>
+                  <p className="text-sm text-[var(--text-muted)]">Spring direkt in ein Lehrjahr.</p>
+                </div>
+                <Link href="/compendium" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-dark)] no-underline hover:border-[var(--accent)]">
+                  Kompendium
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[1, 2, 3, 4].map(y => (
+                  <Link key={y} href={`/worksheets/year-${y}`} className="group rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-4 no-underline text-[var(--text)] transition-all hover:-translate-y-0.5 hover:border-[var(--accent)] hover:bg-[var(--card-hover)] hover:shadow-[0_14px_30px_rgba(15,19,22,0.12)]">
+                    <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-light)] text-lg font-black text-[var(--accent-dark)]">{y}</span>
+                    <span className="block text-sm font-bold">{YEAR_LABELS[String(y)]}</span>
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-muted)] group-hover:text-[var(--accent-dark)]">
+                      Öffnen
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
 
       {!showUpload && (
         <button
@@ -221,23 +265,31 @@ export default function HomePage() {
             const dropped = e.dataTransfer.files?.[0];
             if (dropped) { setShowUpload(true); handleFileSelect(dropped); }
           }}
-          className={`w-full flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-2xl border-2 border-dashed px-6 py-8 mb-8 cursor-pointer bg-[var(--card)]/60 transition-all ${dragOver ? 'border-[var(--accent)] bg-[var(--accent-light)] scale-[1.01]' : 'border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--card)]'}`}
+                className={`w-full rounded-2xl border-2 border-dashed px-5 py-7 text-left cursor-pointer transition-all sm:px-7 ${dragOver ? 'border-[var(--accent)] bg-[var(--card)] scale-[1.01]' : 'border-[var(--border)] bg-[var(--card)]/95 hover:border-[var(--accent)] hover:bg-[var(--card-hover)]'}`}
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-[0_4px_14px_rgba(139,92,246,0.4)]" style={{ background: 'var(--accent-grad)' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          </span>
-          <span className="text-center sm:text-left">
-            <span className="block font-semibold text-[var(--text)]">PDF oder Word hierher ziehen</span>
-            <span className="block text-sm text-[var(--text-muted)]">oder klicken zum Auswählen — die KI macht daraus ein interaktives Arbeitsblatt</span>
-          </span>
+                <span className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="flex items-center gap-4">
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_12px_28px_rgba(15,118,110,0.3)]" style={{ background: 'var(--accent-grad)' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </span>
+                    <span>
+                      <span className="block text-lg font-extrabold text-[var(--text)]">Neues Arbeitsblatt erstellen</span>
+                      <span className="block text-sm text-[var(--text-muted)]">PDF oder Word hierher ziehen oder klicken.</span>
+                    </span>
+                  </span>
+                  <span className="inline-flex w-fit items-center rounded-full bg-[var(--accent-light)] px-3 py-1 text-xs font-bold text-[var(--accent-dark)]">Upload starten</span>
+                </span>
         </button>
       )}
 
       {showUpload && (
-        <div className="mt-8 bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-serif text-xl font-bold">Dokument hochladen</h2>
-            <button onClick={closeUpload} className="p-1 rounded hover:bg-[var(--surface)] border-none bg-transparent cursor-pointer text-[var(--text-muted)]">
+              <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 shadow-[0_16px_50px_rgba(0,0,0,0.14)] sm:p-6">
+          <div className="flex items-start justify-between gap-4 mb-5">
+                  <div>
+                    <h2 className="font-serif text-2xl font-bold leading-none">Dokument hochladen</h2>
+                    <p className="mt-2 text-sm text-[var(--text-muted)]">Quelle, Modelle und Kategorie bleiben wie vorher steuerbar.</p>
+                  </div>
+            <button onClick={closeUpload} className="p-2 rounded-full hover:bg-[var(--surface)] border border-transparent bg-transparent cursor-pointer text-[var(--text-muted)] hover:text-[var(--text)]">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -249,15 +301,15 @@ export default function HomePage() {
               </div>
               <p className="font-semibold mb-1">{uploadResult.filename} hochgeladen!</p>
               <p className="text-sm text-[var(--text-muted)] mb-4">Dein Dokument wird von der KI verarbeitet. Das kann einige Minuten dauern.</p>
-              <div className="flex gap-3 justify-center">
-                <Link href={`/documents/${uploadResult.id}`} className="bg-[var(--accent)] text-white px-4 py-2 rounded-lg no-underline font-medium hover:bg-[var(--accent-dark)]">Dokument ansehen</Link>
-                <button onClick={closeUpload} className="bg-[var(--card)] border border-[var(--border)] text-[var(--text)] px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-[var(--surface)]">Schließen</button>
+              <div className="flex gap-3 justify-center flex-wrap">
+                <Link href={`/documents/${uploadResult.id}`} className="bg-[var(--accent)] text-white px-4 py-2 rounded-full no-underline font-medium hover:bg-[var(--accent-dark)]">Dokument ansehen</Link>
+                <button onClick={closeUpload} className="bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text)] px-4 py-2 rounded-full font-medium cursor-pointer hover:bg-[var(--surface)]">Schließen</button>
               </div>
             </div>
           ) : (
             <form onSubmit={handleUpload}>
               <div
-                className="border-2 border-dashed border-[var(--border)] rounded-xl p-6 text-center hover:border-[var(--accent)] transition-colors cursor-pointer mb-5"
+                      className="border-2 border-dashed border-[var(--border)] rounded-2xl bg-[var(--input-bg)] p-6 text-center hover:border-[var(--accent)] transition-colors cursor-pointer mb-5"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input ref={fileInputRef} type="file" accept=".pdf,.docx,.doc" onChange={e => handleFileSelect(e.target.files?.[0] || null)} className="hidden" />
@@ -277,8 +329,8 @@ export default function HomePage() {
               </div>
 
               {providers.length > 0 && (
-                <div className="mb-5 space-y-4">
-                  <div>
+                    <div className="mb-5 grid gap-4 lg:grid-cols-3">
+                      <div className="rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
                       Struktur-Modell (Pass 1)
                     </label>
@@ -301,9 +353,9 @@ export default function HomePage() {
                         );
                       })}
                     </select>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Erstellt die Arbeitsblatt-Struktur aus dem Dokument.</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-2">Erstellt die Arbeitsblatt-Struktur.</p>
                   </div>
-                  <div>
+                      <div className="rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
                       Anreicherungs-Modell (Pass 2)
                     </label>
@@ -326,9 +378,9 @@ export default function HomePage() {
                         );
                       })}
                     </select>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Fügt Lösungen, interaktive Komponenten und Hinweise hinzu.</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-2">Fügt Lösungen und Interaktionen hinzu.</p>
                   </div>
-                  <div>
+                      <div className="rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
                       Review-Modell (Pass 3)
                     </label>
@@ -351,13 +403,14 @@ export default function HomePage() {
                         );
                       })}
                     </select>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Prüft und korrigiert das Arbeitsblatt auf Vollständigkeit und Fehler.</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-2">Prüft Vollständigkeit und Fehler.</p>
                   </div>
                 </div>
               )}
 
               <div className="mb-5">
-                <div className="flex items-center gap-3 mb-3">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] p-4">
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <button
                     type="button"
                     onClick={() => setAutoDetect(!autoDetect)}
@@ -374,36 +427,41 @@ export default function HomePage() {
                 {(autoDetect || year || semester || moduleNumber || topic) && (
                   <CategorySelector year={year} semester={semester} moduleNumber={moduleNumber} topic={topic} onYearChange={setYear} onSemesterChange={setSemester} onModuleNumberChange={setModuleNumber} onTopicChange={setTopic} />
                 )}
+                    </div>
               </div>
 
               {uploadError && <div className="mb-4 p-3 bg-[var(--error-bg)] text-[var(--error)] rounded-lg text-sm font-medium">{uploadError}</div>}
 
-              <button type="submit" disabled={uploading || !file} className="w-full flex items-center justify-center gap-2 bg-[var(--accent)] text-white px-5 py-3 rounded-lg font-semibold hover:bg-[var(--accent-dark)] transition-colors disabled:opacity-50 border-none cursor-pointer">
+              <button type="submit" disabled={uploading || !file} className="w-full flex items-center justify-center gap-2 bg-[var(--accent)] text-white px-5 py-3.5 rounded-xl font-semibold hover:bg-[var(--accent-dark)] transition-colors disabled:opacity-50 border-none cursor-pointer shadow-[0_12px_28px_rgba(15,118,110,0.24)]">
                 {uploading ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"/>Wird hochgeladen...</> : 'Hochladen & Verarbeiten'}
               </button>
             </form>
           )}
-        </div>
+              </section>
       )}
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-2">
+          <aside className="space-y-5">
         {/* Recent documents */}
-        <section className="lg:col-span-2 bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
-            <h2 className="font-semibold text-base">Zuletzt hinzugefügt</h2>
+            <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-[0_16px_50px_rgba(0,0,0,0.14)]">
+              <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--input-bg)]">
+                <div>
+                  <h2 className="font-bold text-base">Zuletzt hinzugefügt</h2>
+                  <p className="text-xs text-[var(--text-muted)]">Deine neuesten Dokumente</p>
+                </div>
             {recentDocs.length > 0 && <span className="text-xs text-[var(--text-muted)]">{recentDocs.length} Dokumente</span>}
           </div>
           {recentDocs.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-              Noch keine Dokumente — lade oben dein erstes Arbeitsblatt hoch.
+                  Noch keine Dokumente. Lade links dein erstes Arbeitsblatt hoch.
             </div>
           ) : (
             <div className="divide-y divide-[var(--border)]">
               {recentDocs.map(doc => {
                 const meta = STATUS_META[doc.status] || STATUS_META.uploaded;
                 return (
-                  <Link key={doc.id} href={`/documents/${doc.id}`} className="flex items-center gap-3 px-5 py-3.5 no-underline text-[var(--text)] hover:bg-[var(--surface)] transition-colors group">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-light)] text-[var(--accent-dark)] transition-transform group-hover:scale-105">
+                      <Link key={doc.id} href={`/documents/${doc.id}`} className="flex items-center gap-3 px-5 py-4 no-underline text-[var(--text)] hover:bg-[var(--input-bg)] transition-colors group">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-light)] text-[var(--accent-dark)] transition-transform group-hover:scale-105">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     </span>
                     <span className="flex-1 min-w-0">
@@ -421,11 +479,13 @@ export default function HomePage() {
         </section>
 
         {/* Right rail */}
-        <div className="flex flex-col gap-5">
-          <Link href="/compendium" className="group relative overflow-hidden rounded-2xl p-5 no-underline text-white shadow-[var(--shadow-md)]" style={{ background: 'var(--accent-grad)' }}>
-            <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(300px 140px at 15% 0%, rgba(255,255,255,0.7), transparent 60%)' }} />
-            <div className="relative">
-              <div className="flex items-center gap-2 font-semibold mb-1">
+            <Link href="/compendium" className="group relative block overflow-hidden rounded-2xl p-5 no-underline text-white shadow-[0_16px_50px_rgba(0,0,0,0.18)]" style={{ background: 'var(--accent-grad)' }}>
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-black/12" />
+              <div className="relative">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.15]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <div className="flex items-center gap-2 font-bold mb-1">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                 Kompendium
               </div>
@@ -436,6 +496,7 @@ export default function HomePage() {
               </span>
             </div>
           </Link>
+          </aside>
         </div>
       </div>
     </div>

@@ -5,32 +5,36 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0f1117;
-  --card: #1a1d27;
-  --card-hover: #222634;
-  --border: #2a2e3e;
-  --border-light: #353a4f;
-  --text: #e4e6ef;
-  --text-muted: #8b8fa5;
-  --accent: #6366f1;
-  --accent-light: rgba(99,102,241,0.12);
-  --accent-dark: #818cf8;
-  --accent-glow: rgba(99,102,241,0.25);
-  --success: #34d399;
-  --success-bg: rgba(52,211,153,0.1);
-  --error: #f87171;
-  --error-bg: rgba(248,113,113,0.1);
-  --input-bg: #161922;
-  --surface: #14161e;
-  --gradient-start: #6366f1;
-  --gradient-end: #a78bfa;
+  --bg: #101316;
+  --card: #f7f2e8;
+  --card-hover: #fffaf0;
+  --border: #d9d0c0;
+  --border-light: #e9dfce;
+  --text: #202326;
+  --text-muted: #6f7478;
+  --accent: #0f766e;
+  --accent-light: rgba(15, 118, 110, 0.12);
+  --accent-dark: #115e59;
+  --accent-glow: rgba(15, 118, 110, 0.24);
+  --accent-grad: linear-gradient(135deg, #0f766e 0%, #2563eb 58%, #d97706 100%);
+  --success: #16834f;
+  --success-bg: rgba(22, 131, 79, 0.11);
+  --error: #c2410c;
+  --error-bg: rgba(194, 65, 12, 0.12);
+  --input-bg: #fffcf5;
+  --surface: #ede4d5;
+  --gradient-start: #0f766e;
+  --gradient-end: #2563eb;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.12) 0%, transparent 32%),
+    linear-gradient(225deg, rgba(217, 119, 6, 0.13) 0%, transparent 28%),
+    var(--bg);
   color: var(--text);
   line-height: 1.65;
   min-height: 100vh;

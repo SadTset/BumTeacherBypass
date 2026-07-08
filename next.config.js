@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
@@ -6,7 +8,9 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  turbopack: {},
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   serverExternalPackages: ['better-sqlite3', '@napi-rs/canvas'],
   webpack: (config, { isServer }) => {
     if (isServer) {
