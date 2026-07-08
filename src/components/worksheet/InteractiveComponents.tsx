@@ -2679,7 +2679,7 @@ function FunctionGraphC({ p, ctx }: { p: FunctionGraphPrimitive; ctx: WkCtx }) {
           </span>
         ))}
         {drawMode === 'line' && drawn.length === 2 && (
-          <span className="inline-flex items-center gap-1.5 text-xs bg-white border border-[var(--border)] rounded px-2 py-1">
+           <span className="inline-flex items-center gap-1.5 text-xs bg-[var(--card)] border border-[var(--border)] rounded px-2 py-1">
             Deine Gerade: <Latex tex={lineEquation(drawn[0], drawn[1])} />
           </span>
         )}

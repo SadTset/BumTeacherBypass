@@ -215,7 +215,7 @@ export function AppNav() {
       </aside>
 
       {/* ── Mobile top bar ── */}
-      <header className="lg:hidden sticky top-0 z-40 border-b border-[var(--border)] bg-white/75 backdrop-blur-xl">
+      <header className="lg:hidden sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--card)]/75 backdrop-blur-xl">
         <div className="flex items-center justify-between px-4 py-2.5">
           <a href="/" className="flex items-center gap-2 no-underline">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-[0_2px_10px_rgba(139,92,246,0.4)]" style={{ background: 'var(--accent-grad)' }}>
@@ -230,7 +230,7 @@ export function AppNav() {
       </header>
 
       {/* ── Mobile bottom tabs ── */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--border)] bg-white/85 backdrop-blur-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} aria-label="Hauptnavigation">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--border)] bg-[var(--card)]/85 backdrop-blur-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} aria-label="Hauptnavigation">
         <div className="grid grid-cols-4">
           {NAV.map(item => {
             const active = isActive(pathname, item.href);

@@ -201,7 +201,7 @@ export default function HomePage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
         {[1, 2, 3, 4].map(y => (
-          <Link key={y} href={`/worksheets/year-${y}`} className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 no-underline text-[var(--text)] hover:border-[var(--accent)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all">
+          <Link key={y} href={`/worksheets/year-${y}`} className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 no-underline text-[var(--text)] hover:border-[var(--accent)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-light)] text-[var(--accent-dark)] font-extrabold text-sm transition-transform group-hover:scale-110">{y}</span>
             <span className="text-sm font-semibold">Lehrjahr</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"><polyline points="9 18 15 12 9 6"/></svg>
@@ -221,7 +221,7 @@ export default function HomePage() {
             const dropped = e.dataTransfer.files?.[0];
             if (dropped) { setShowUpload(true); handleFileSelect(dropped); }
           }}
-          className={`w-full flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-2xl border-2 border-dashed px-6 py-8 mb-8 cursor-pointer bg-white/60 transition-all ${dragOver ? 'border-[var(--accent)] bg-[var(--accent-light)] scale-[1.01]' : 'border-[var(--border)] hover:border-[var(--accent)] hover:bg-white'}`}
+          className={`w-full flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rounded-2xl border-2 border-dashed px-6 py-8 mb-8 cursor-pointer bg-[var(--card)]/60 transition-all ${dragOver ? 'border-[var(--accent)] bg-[var(--accent-light)] scale-[1.01]' : 'border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--card)]'}`}
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-[0_4px_14px_rgba(139,92,246,0.4)]" style={{ background: 'var(--accent-grad)' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -234,10 +234,10 @@ export default function HomePage() {
       )}
 
       {showUpload && (
-        <div className="mt-8 bg-white border border-[var(--border)] rounded-xl p-6 shadow-sm">
+        <div className="mt-8 bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-serif text-xl font-bold">Dokument hochladen</h2>
-            <button onClick={closeUpload} className="p-1 rounded hover:bg-gray-100 border-none bg-transparent cursor-pointer text-[var(--text-muted)]">
+            <button onClick={closeUpload} className="p-1 rounded hover:bg-[var(--surface)] border-none bg-transparent cursor-pointer text-[var(--text-muted)]">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -251,7 +251,7 @@ export default function HomePage() {
               <p className="text-sm text-[var(--text-muted)] mb-4">Dein Dokument wird von der KI verarbeitet. Das kann einige Minuten dauern.</p>
               <div className="flex gap-3 justify-center">
                 <Link href={`/documents/${uploadResult.id}`} className="bg-[var(--accent)] text-white px-4 py-2 rounded-lg no-underline font-medium hover:bg-[var(--accent-dark)]">Dokument ansehen</Link>
-                <button onClick={closeUpload} className="bg-white border border-[var(--border)] text-[var(--text)] px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-gray-50">Schließen</button>
+                <button onClick={closeUpload} className="bg-[var(--card)] border border-[var(--border)] text-[var(--text)] px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-[var(--surface)]">Schließen</button>
               </div>
             </div>
           ) : (
@@ -361,7 +361,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => setAutoDetect(!autoDetect)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border-none cursor-pointer ${autoDetect ? 'bg-[var(--accent)]' : 'bg-gray-300'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border-none cursor-pointer ${autoDetect ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`}
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoDetect ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -388,7 +388,7 @@ export default function HomePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-2">
         {/* Recent documents */}
-        <section className="lg:col-span-2 bg-white border border-[var(--border)] rounded-2xl shadow-sm overflow-hidden">
+        <section className="lg:col-span-2 bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
             <h2 className="font-semibold text-base">Zuletzt hinzugefügt</h2>
             {recentDocs.length > 0 && <span className="text-xs text-[var(--text-muted)]">{recentDocs.length} Dokumente</span>}

@@ -133,7 +133,7 @@ export function Tutorial() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Tutorial">
-      <div className="bg-[var(--card)] rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--card)] rounded-2xl shadow-2xl shadow-black/30 max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 sm:p-8">
           <div className="flex items-start justify-between mb-4">
             <div className="w-12 h-12 rounded-xl bg-[var(--accent-light)] flex items-center justify-center text-2xl" aria-hidden="true">

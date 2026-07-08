@@ -54,9 +54,9 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors border-none cursor-pointer ${checked ? 'bg-[var(--accent)]' : 'bg-gray-300'}`}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors border-none cursor-pointer ${checked ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`}
     >
-      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
+      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
     </button>
   );
 }
@@ -117,7 +117,7 @@ function LoadModelsButton({ type, apiKey, baseUrl, onLoaded }: {
         Modelle laden
       </button>
       {count !== null && !error && <span className="text-xs text-[var(--success)] truncate">{count} Modelle geladen</span>}
-      {error && <span className="text-xs text-red-500 truncate" title={error}>{error}</span>}
+      {error && <span className="text-xs text-[var(--error)] truncate" title={error}>{error}</span>}
     </div>
   );
 }
@@ -179,7 +179,7 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" role="dialog" aria-modal="true">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+      <div className="bg-[var(--card)] rounded-2xl shadow-2xl shadow-black/30 w-full max-w-xl max-h-[90vh] flex flex-col">
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between shrink-0">
           <h2 className="font-serif text-lg font-bold">{mode === 'add' ? 'Anbieter hinzufügen' : 'Anbieter bearbeiten'}</h2>
           <button type="button" onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)] bg-transparent border-none cursor-pointer p-1" aria-label="Schließen">
@@ -200,7 +200,7 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
                     key={key}
                     type="button"
                     onClick={() => switchType(key)}
-                    className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${active ? 'border-[var(--accent)] bg-[var(--accent-light)]' : 'border-[var(--border)] hover:border-[var(--accent)] bg-white'}`}
+                    className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${active ? 'border-[var(--accent)] bg-[var(--accent-light)]' : 'border-[var(--border)] hover:border-[var(--accent)] bg-[var(--card)]'}`}
                   >
                     <div className="font-semibold text-sm">{info.label}</div>
                     <div className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{info.description}</div>
@@ -284,7 +284,7 @@ function ProviderModal({ mode, initial, visibleTypes, saving, error, onSave, onC
         </div>
 
         <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3 shrink-0">
-          <button type="button" onClick={onClose} className="flex-1 bg-white border border-[var(--border)] text-[var(--text)] px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors cursor-pointer">
+          <button type="button" onClick={onClose} className="flex-1 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] px-5 py-2.5 rounded-lg font-semibold hover:bg-[var(--surface)] transition-colors cursor-pointer">
             Abbrechen
           </button>
           <button
@@ -337,13 +337,13 @@ function ProviderCard({ provider, isDefault, testing, testResult, deleting, onTe
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <button onClick={onTest} disabled={testing} className="text-xs bg-white border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg font-semibold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors disabled:opacity-50 cursor-pointer">
+        <button onClick={onTest} disabled={testing} className="text-xs bg-[var(--card)] border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg font-semibold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors disabled:opacity-50 cursor-pointer">
           {testing ? 'Teste…' : 'Testen'}
         </button>
-        <button onClick={onEdit} className="text-xs bg-white border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg font-semibold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors cursor-pointer">
+        <button onClick={onEdit} className="text-xs bg-[var(--card)] border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg font-semibold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors cursor-pointer">
           Bearbeiten
         </button>
-        <button onClick={onDelete} disabled={deleting} className="text-xs text-red-500 border border-red-200 bg-white px-3 py-1.5 rounded-lg font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer">
+        <button onClick={onDelete} disabled={deleting} className="text-xs text-[var(--error)] border border-[var(--error)]/30 bg-[var(--card)] px-3 py-1.5 rounded-lg font-semibold hover:bg-[var(--error-bg)] transition-colors disabled:opacity-50 cursor-pointer">
           {deleting ? 'Lösche…' : 'Löschen'}
         </button>
       </div>
@@ -594,7 +594,7 @@ export default function SettingsPage() {
       )}
 
       {/* ── Providers ── */}
-      <section className="bg-white border border-[var(--border)] rounded-xl shadow-sm mb-6 overflow-hidden">
+      <section className="bg-[var(--card)] border border-[var(--border)] rounded-xl mb-6 overflow-hidden">
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold text-base">KI-Anbieter</h2>
@@ -634,7 +634,7 @@ export default function SettingsPage() {
       </section>
 
       {/* ── Roles ── */}
-      <section className="bg-white border border-[var(--border)] rounded-xl shadow-sm mb-6">
+      <section className="bg-[var(--card)] border border-[var(--border)] rounded-xl mb-6">
         <div className="px-6 py-4 border-b border-[var(--border)]">
           <h2 className="font-semibold text-base">Modell-Rollen</h2>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">Welches Modell übernimmt welchen Schritt der Verarbeitung. Rollen ohne Auswahl nutzen den Standard.</p>
@@ -659,7 +659,7 @@ export default function SettingsPage() {
       </section>
 
       {/* ── Processing options ── */}
-      <section className="bg-white border border-[var(--border)] rounded-xl shadow-sm mb-6">
+      <section className="bg-[var(--card)] border border-[var(--border)] rounded-xl mb-6">
         <div className="px-6 py-4 border-b border-[var(--border)]">
           <h2 className="font-semibold text-base">Verarbeitung</h2>
         </div>
@@ -689,7 +689,7 @@ export default function SettingsPage() {
       {/* Sticky save bar */}
       {hasUnsavedChanges && (
         <div className="fixed bottom-20 lg:bottom-4 left-4 right-4 lg:left-64 z-40 max-w-3xl mx-auto">
-          <div className="bg-white border border-[var(--border)] rounded-xl shadow-lg p-4 flex items-center justify-between gap-3">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-lg shadow-black/30 p-4 flex items-center justify-between gap-3">
             <span className="text-sm font-medium">Ungespeicherte Änderungen</span>
             <div className="flex items-center gap-3 shrink-0">
               <button

@@ -49,7 +49,7 @@ export function SectionHeader({ number, children }: { number: string | number; c
 
 export function Section({ number, title, children, className = '' }: { number?: string | number; title?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white border border-[var(--border)] rounded-xl p-6 mb-6 shadow-sm${className ? ' ' + className : ''}`}>
+    <div className={`bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 mb-6${className ? ' ' + className : ''}`}>
       {number !== undefined && title && <SectionHeader number={number}>{title}</SectionHeader>}
       {children}
     </div>
@@ -58,7 +58,7 @@ export function Section({ number, title, children, className = '' }: { number?: 
 
 export function Story({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-[var(--border)] rounded-xl p-6 mb-6 shadow-sm">
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 mb-6">
       <div className="font-serif text-lg leading-relaxed">{children}</div>
     </div>
   );

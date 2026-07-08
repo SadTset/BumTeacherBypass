@@ -51,7 +51,7 @@ function renderMarkdown(text: string): React.ReactNode {
         parts.push(<strong key={key++}>{earliest.content}</strong>);
         break;
       case 'code':
-        parts.push(<code key={key++} className="font-mono bg-gray-100 px-1 rounded text-sm">{earliest.content}</code>);
+        parts.push(<code key={key++} className="font-mono bg-[var(--surface)] px-1 rounded text-sm">{earliest.content}</code>);
         break;
       case 'linebreak':
         parts.push(<br key={key++} />);

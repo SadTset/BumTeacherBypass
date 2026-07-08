@@ -370,7 +370,7 @@ export default function CompendiumDetailPage() {
           )}
           <button
             onClick={handleDelete}
-            className="inline-flex items-center gap-1.5 text-xs border border-[var(--border)] text-[var(--text-muted)] px-2.5 py-1 rounded-lg hover:border-red-400 hover:text-red-500 transition-colors bg-transparent cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs border border-[var(--border)] text-[var(--text-muted)] px-2.5 py-1 rounded-lg hover:border-[var(--error)] hover:text-[var(--error)] transition-colors bg-transparent cursor-pointer"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Löschen
