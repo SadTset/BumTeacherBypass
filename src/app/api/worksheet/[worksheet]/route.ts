@@ -18,10 +18,11 @@ function validateString(val: unknown, maxLen: number, label: string): string | n
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { worksheet: string } }
+  { params }: { params: Promise<{ worksheet: string }> }
 ) {
   try {
-    const worksheet = decodeURIComponent(params.worksheet);
+    const { worksheet: ws } = await params;
+    const worksheet = decodeURIComponent(ws);
     const err = validateString(worksheet, MAX_WORKSHEET, 'worksheet');
     if (err) return NextResponse.json({ error: err }, { status: 400 });
 
@@ -44,10 +45,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { worksheet: string } }
+  { params }: { params: Promise<{ worksheet: string }> }
 ) {
   try {
-    const worksheet = decodeURIComponent(params.worksheet);
+    const { worksheet: ws } = await params;
+    const worksheet = decodeURIComponent(ws);
     const err = validateString(worksheet, MAX_WORKSHEET, 'worksheet');
     if (err) return NextResponse.json({ error: err }, { status: 400 });
 
@@ -95,10 +97,11 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { worksheet: string } }
+  { params }: { params: Promise<{ worksheet: string }> }
 ) {
   try {
-    const worksheet = decodeURIComponent(params.worksheet);
+    const { worksheet: ws } = await params;
+    const worksheet = decodeURIComponent(ws);
     const err = validateString(worksheet, MAX_WORKSHEET, 'worksheet');
     if (err) return NextResponse.json({ error: err }, { status: 400 });
 

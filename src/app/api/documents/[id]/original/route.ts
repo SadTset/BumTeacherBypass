@@ -9,16 +9,17 @@ const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const doc = getDocument(params.id);
+    const { id } = await params;
+    const doc = getDocument(id);
     if (!doc) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
     const files = fs.readdirSync(UPLOAD_DIR);
-    const match = files.find(f => f.startsWith(params.id));
+    const match = files.find(f => f.startsWith(id));
 
     if (!match) {
       return NextResponse.json({ error: 'Original file not found' }, { status: 404 });

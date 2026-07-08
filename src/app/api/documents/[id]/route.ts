@@ -4,15 +4,16 @@ import { getDocument, getPagesByDocument, deleteDocument, updateDocumentCategory
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const doc = getDocument(params.id);
+    const { id } = await params;
+    const doc = getDocument(id);
     if (!doc) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    const pages = getPagesByDocument(params.id);
+    const pages = getPagesByDocument(id);
     return NextResponse.json({ document: doc, pages });
   } catch (error) {
     console.error('Get document error:', error);
@@ -22,10 +23,11 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const doc = getDocument(params.id);
+    const { id } = await params;
+    const doc = getDocument(id);
     if (!doc) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
@@ -33,8 +35,8 @@ export async function PATCH(
     const body = await request.json();
     const { year, semester, module_number, topic } = body;
 
-    updateDocumentCategory(params.id, year || '', semester || '', module_number || '', topic || '');
-    const updated = getDocument(params.id);
+    updateDocumentCategory(id, year || '', semester || '', module_number || '', topic || '');
+    const updated = getDocument(id);
 
     return NextResponse.json({ document: updated });
   } catch (error) {
@@ -45,15 +47,16 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const doc = getDocument(params.id);
+    const { id } = await params;
+    const doc = getDocument(id);
     if (!doc) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    await deleteDocument(params.id);
+    await deleteDocument(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Delete document error:', error);

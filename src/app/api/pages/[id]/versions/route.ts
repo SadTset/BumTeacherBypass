@@ -4,10 +4,11 @@ import { getPageVersions, restorePageVersion } from '@/lib/document-store';
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const versions = getPageVersions(params.id);
+    const { id } = await params;
+    const versions = getPageVersions(id);
     return NextResponse.json({ versions });
   } catch (error) {
     console.error('Get versions error:', error);
@@ -17,11 +18,12 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { versionId } = await request.json();
-    restorePageVersion(params.id, versionId);
+    restorePageVersion(id, versionId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Restore version error:', error);

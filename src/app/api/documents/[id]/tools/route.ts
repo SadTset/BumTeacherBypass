@@ -5,15 +5,16 @@ import { analyzeTextForToolHints } from '@/lib/tool-analysis';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const doc = getDocument(params.id);
+    const { id } = await params;
+    const doc = getDocument(id);
     if (!doc) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    const pages = getPagesByDocument(params.id);
+    const pages = getPagesByDocument(id);
     const allText = pages.map(p => p.raw_text).join('\n\n');
     const suggestions = analyzeTextForToolHints(allText);
 

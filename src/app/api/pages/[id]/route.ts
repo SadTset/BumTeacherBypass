@@ -7,10 +7,11 @@ import { listCompendiumEntries } from '@/lib/compendium-store';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const page = getPage(params.id);
+    const { id } = await params;
+    const page = getPage(id);
     if (!page) {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
@@ -23,22 +24,23 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { content, worksheet_data } = body;
 
-    const page = getPage(params.id);
+    const page = getPage(id);
     if (!page) {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
     if (typeof content === 'string') {
-      updatePageContent(params.id, content);
+      updatePageContent(id, content);
     }
     if (worksheet_data !== undefined) {
-      updatePageWorksheetData(params.id, worksheet_data);
+      updatePageWorksheetData(id, worksheet_data);
     }
 
     return NextResponse.json({ ok: true });
@@ -50,10 +52,11 @@ export async function PUT(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const page = getPage(params.id);
+    const { id } = await params;
+    const page = getPage(id);
     if (!page) {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
@@ -113,9 +116,9 @@ export async function POST(
       try {
         const result = await regeneratePage(page.raw_text, page.page_number, allPages.length, providerConfig, enrichmentConfig, compendiumEntries, reviewerConfig, timings, (updated) => updateProcessingTimings(page.document_id, updated));
 
-        updatePageContent(params.id, result.content);
-        updatePageTitle(params.id, result.title);
-        updatePageWorksheetData(params.id, result.worksheet_data);
+        updatePageContent(id, result.content);
+        updatePageTitle(id, result.title);
+        updatePageWorksheetData(id, result.worksheet_data);
 
         timings.total = Object.values(timings).reduce((a, b) => a + b, 0);
         updateProcessingTimings(page.document_id, timings);
