@@ -76,13 +76,6 @@ function cleanFilename(name: string): string {
   return name.replace(/\.(pdf|docx?|PDF|DOCX?)+$/g, '').replace(/[_-]+/g, ' ');
 }
 
-const YEAR_LABELS: Record<string, string> = {
-  '1': '1. Lehrjahr',
-  '2': '2. Lehrjahr',
-  '3': '3. Lehrjahr',
-  '4': '4. Lehrjahr',
-};
-
 export default function HomePage() {
   const [showUpload, setShowUpload] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -339,51 +332,8 @@ export default function HomePage() {
           </div>
         </header>
 
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[280px_minmax(0,1fr)_340px] xl:items-start">
-          <aside className="min-w-0 space-y-5 xl:sticky xl:top-8 xl:self-start">
-            <section className="cyber-panel rounded-2xl p-4 sm:p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-bold text-white">Bibliothek</h2>
-                  <p className="text-sm text-[var(--text-muted)]">Spring direkt in ein Lehrjahr.</p>
-                </div>
-                <span className="rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1 text-xs font-semibold text-[var(--accent-dark)]">4 Jahre</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-1">
-                {[1, 2, 3, 4].map(y => (
-                  <Link key={y} href={`/worksheets/year-${y}`} className="cyber-card group rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-4 no-underline text-[var(--text)]">
-                    <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-light)] text-lg font-black text-[var(--accent-dark)] shadow-[0_0_18px_rgba(34,211,238,0.18)]">{y}</span>
-                    <span className="block text-sm font-bold">{YEAR_LABELS[String(y)]}</span>
-                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-muted)] group-hover:text-[var(--accent-dark)]">
-                      Öffnen
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </section>
-
-            <Link href="/compendium" className="cyber-primary group relative block overflow-hidden rounded-2xl p-5 no-underline text-white">
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-black/25" />
-              <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.15] shadow-[0_0_24px_rgba(255,255,255,0.12)]">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                </div>
-                <div className="flex items-center gap-2 font-bold mb-1">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                  Kompendium
-                </div>
-                <p className="text-sm text-white/85 m-0">Dein automatisch wachsendes Nachschlagewerk zu allen Themen.</p>
-                <span className="inline-flex items-center gap-1 text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
-                  Öffnen
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </span>
-              </div>
-            </Link>
-          </aside>
-
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
           <main className="min-w-0 space-y-5">
-
       {!showUpload && (
         <button
           type="button"
