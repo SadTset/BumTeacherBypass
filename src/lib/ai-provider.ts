@@ -84,6 +84,26 @@ export interface ProviderResponse {
   [key: string]: unknown;
 }
 
+export interface PracticeQuestion {
+  id: string;
+  type: 'single_choice' | 'short_answer';
+  question: string;
+  options?: string[];
+  correctAnswer: string;
+  acceptableAnswers?: string[];
+  explanation: string;
+  objective: string;
+}
+
+export interface PracticeTest {
+  title: string;
+  module_number: string;
+  topic: string;
+  objectives: string[];
+  questions: PracticeQuestion[];
+  generatedBy: 'ai' | 'fallback';
+}
+
 function repairTruncatedJSON(content: string): string | null {
   // Try to repair truncated JSON by closing open strings, arrays, and objects.
   // Strategy: scan forward tracking state. Find the last position where we can
@@ -1103,6 +1123,101 @@ Respond with ONLY a JSON object: {"answers": [{"fieldId": "...", "expected": "..
       console.error('fillEmptyExpectedValues failed:', err);
       return {};
     }
+  }
+
+  async generatePracticeTestFromObjectives(rawText: string, moduleNumber = '', topic = ''): Promise<PracticeTest> {
+    const prompt = `Du erstellst einen interaktiven Übungstest für Lernziele aus der Schweizer Berufsbildung.
+
+AUFGABE:
+- Lies die Lernziele und fasse sie in klare, prüfbare Ziele zusammen.
+- Erstelle daraus einen Übungstest auf Deutsch.
+- Der Test soll zum Üben geeignet sein, nicht nur Definitionen abfragen.
+- Nutze möglichst konkrete Situationen, kurze Fallbeispiele und typische Prüfungsfragen.
+- Erstelle 8 bis 12 Fragen, sofern genügend Lernziele vorhanden sind.
+- Verwende überwiegend single_choice-Fragen mit genau 4 Optionen, damit sie automatisch geprüft werden können.
+- Ergänze 1 bis 3 short_answer-Fragen, wenn ein Lernziel eher Erklärung/Begründung verlangt.
+
+FRAGEFORMAT:
+- type ist "single_choice" oder "short_answer".
+- Bei single_choice müssen "options" genau 4 Antwortmöglichkeiten enthalten.
+- "correctAnswer" muss bei single_choice exakt einer Option entsprechen.
+- Bei short_answer enthält "correctAnswer" eine kurze Musterlösung und "acceptableAnswers" 2-5 wichtige Stichwörter oder Synonyme.
+- "explanation" erklärt knapp, warum die Antwort stimmt.
+- "objective" referenziert das Lernziel, aus dem die Frage stammt.
+
+Respond ONLY with this JSON shape:
+{
+  "title": "Übungstest Modul ...",
+  "objectives": ["..."],
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single_choice",
+      "question": "...",
+      "options": ["...", "...", "...", "..."],
+      "correctAnswer": "...",
+      "acceptableAnswers": [],
+      "explanation": "...",
+      "objective": "..."
+    }
+  ]
+}
+
+Module: ${moduleNumber || 'unbekannt'}
+Thema: ${topic || 'Lernziele'}
+
+LERNZIELE:
+${rawText.substring(0, 9000)}`;
+
+    const responseText = await this.callProvider(prompt, 'Erstelle den Übungstest als gültiges JSON.');
+    const parsed = extractJSON(responseText) as {
+      title?: unknown;
+      objectives?: unknown;
+      questions?: unknown;
+    };
+
+    const objectives = Array.isArray(parsed.objectives)
+      ? parsed.objectives.map(String).map(s => s.trim()).filter(Boolean).slice(0, 16)
+      : [];
+
+    const rawQuestions = Array.isArray(parsed.questions) ? parsed.questions as Array<Record<string, unknown>> : [];
+    const questions: PracticeQuestion[] = rawQuestions.map((q, index): PracticeQuestion => {
+      const type = q.type === 'short_answer' ? 'short_answer' : 'single_choice';
+      const options = Array.isArray(q.options)
+        ? q.options.map(String).map(s => s.trim()).filter(Boolean).slice(0, 4)
+        : [];
+      const sanitizedType: PracticeQuestion['type'] = type === 'single_choice' && options.length >= 2 ? 'single_choice' : 'short_answer';
+      let correctAnswer = String(q.correctAnswer || q.answer || '').trim();
+      if (type === 'single_choice' && options.length > 0 && !options.includes(correctAnswer)) {
+        correctAnswer = options[0];
+      }
+      const acceptableAnswers = Array.isArray(q.acceptableAnswers)
+        ? q.acceptableAnswers.map(String).map(s => s.trim()).filter(Boolean).slice(0, 6)
+        : [];
+      return {
+        id: String(q.id || `q${index + 1}`).replace(/[^\w-]/g, '') || `q${index + 1}`,
+        type: sanitizedType,
+        question: String(q.question || '').trim(),
+        options: options.length >= 2 ? options : undefined,
+        correctAnswer,
+        acceptableAnswers,
+        explanation: String(q.explanation || '').trim(),
+        objective: String(q.objective || objectives[index % Math.max(1, objectives.length)] || '').trim(),
+      };
+    }).filter(q => q.question && q.correctAnswer);
+
+    if (questions.length === 0) {
+      throw new Error('AI returned no usable practice questions');
+    }
+
+    return {
+      title: String(parsed.title || `Übungstest${moduleNumber ? ` Modul ${moduleNumber}` : ''}`).trim(),
+      module_number: moduleNumber,
+      topic,
+      objectives,
+      questions: questions.slice(0, 12),
+      generatedBy: 'ai',
+    };
   }
 
   private async callProvider(systemPrompt: string, userMessage: string, images?: VisionImage[]): Promise<string> {

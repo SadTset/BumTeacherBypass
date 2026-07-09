@@ -40,6 +40,26 @@ interface RecentDoc {
   created_at: string;
 }
 
+interface PracticeQuestion {
+  id: string;
+  type: 'single_choice' | 'short_answer';
+  question: string;
+  options?: string[];
+  correctAnswer: string;
+  acceptableAnswers?: string[];
+  explanation: string;
+  objective: string;
+}
+
+interface PracticeTest {
+  title: string;
+  module_number: string;
+  topic: string;
+  objectives: string[];
+  questions: PracticeQuestion[];
+  generatedBy: 'ai' | 'fallback';
+}
+
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   processed: { label: 'Bereit', cls: 'bg-[var(--success-bg)] text-[var(--success)] border border-[rgba(56,248,167,0.28)]' },
   processing: { label: 'In Arbeit', cls: 'bg-[var(--accent-light)] text-[var(--accent-dark)] border border-[rgba(34,211,238,0.28)] animate-pulse' },
@@ -80,8 +100,22 @@ export default function HomePage() {
   const [selectedEnrichmentModel, setSelectedEnrichmentModel] = useState('');
   const [selectedReviewerModel, setSelectedReviewerModel] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const practiceFileInputRef = useRef<HTMLInputElement>(null);
   const [recentDocs, setRecentDocs] = useState<RecentDoc[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [showPractice, setShowPractice] = useState(false);
+  const [practiceFile, setPracticeFile] = useState<File | null>(null);
+  const [practiceText, setPracticeText] = useState('');
+  const [practiceModuleNumber, setPracticeModuleNumber] = useState('');
+  const [practiceTopic, setPracticeTopic] = useState('');
+  const [selectedPracticeModel, setSelectedPracticeModel] = useState('');
+  const [generatingPractice, setGeneratingPractice] = useState(false);
+  const [practiceError, setPracticeError] = useState<string | null>(null);
+  const [practiceWarning, setPracticeWarning] = useState<string | null>(null);
+  const [practiceTest, setPracticeTest] = useState<PracticeTest | null>(null);
+  const [practiceAnswers, setPracticeAnswers] = useState<Record<string, string>>({});
+  const [practiceChecked, setPracticeChecked] = useState(false);
+  const [practiceDragOver, setPracticeDragOver] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -120,6 +154,7 @@ export default function HomePage() {
         setSelectedStructureModel(defaultModel);
         setSelectedEnrichmentModel(defaultModel);
         setSelectedReviewerModel(defaultModel);
+        setSelectedPracticeModel(defaultModel);
       }
       if (settingsData.structureProviderId) {
         const sProv = opts.find(p => p.id === settingsData.structureProviderId.split(':')[0]);
@@ -132,6 +167,10 @@ export default function HomePage() {
       if (settingsData.reviewerProviderId) {
         const rProv = opts.find(p => p.id === settingsData.reviewerProviderId.split(':')[0]);
         if (rProv) setSelectedReviewerModel(settingsData.reviewerProviderId);
+      }
+      if (settingsData.lightweightProviderId) {
+        const pProv = opts.find(p => p.id === settingsData.lightweightProviderId.split(':')[0]);
+        if (pProv) setSelectedPracticeModel(settingsData.lightweightProviderId);
       }
     }).catch(() => {});
   }, []);
@@ -188,6 +227,80 @@ export default function HomePage() {
     setUploadError(null);
     setYear(''); setSemester(''); setModuleNumber(''); setTopic('');
   };
+
+  const handlePracticeFileSelect = (selectedFile: File | null) => {
+    setPracticeFile(selectedFile);
+    setPracticeError(null);
+    setPracticeWarning(null);
+    setPracticeChecked(false);
+  };
+
+  const closePractice = () => {
+    setShowPractice(false);
+    setPracticeFile(null);
+    setPracticeText('');
+    setPracticeModuleNumber('');
+    setPracticeTopic('');
+    setPracticeError(null);
+    setPracticeWarning(null);
+    setPracticeTest(null);
+    setPracticeAnswers({});
+    setPracticeChecked(false);
+  };
+
+  const handlePracticeGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!practiceFile && !practiceText.trim()) {
+      setPracticeError('Lade Lernziele hoch oder füge sie als Text ein.');
+      return;
+    }
+
+    setGeneratingPractice(true);
+    setPracticeError(null);
+    setPracticeWarning(null);
+    setPracticeChecked(false);
+    try {
+      const formData = new FormData();
+      if (practiceFile) formData.append('file', practiceFile);
+      if (practiceText.trim()) formData.append('text', practiceText.trim());
+      if (practiceModuleNumber.trim()) formData.append('module_number', practiceModuleNumber.trim());
+      if (practiceTopic.trim()) formData.append('topic', practiceTopic.trim());
+      if (selectedPracticeModel) formData.append('providerModel', selectedPracticeModel);
+
+      const res = await fetch('/api/practice-test', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        setPracticeError(data.error || 'Test konnte nicht erstellt werden');
+        return;
+      }
+      setPracticeTest(data.test || null);
+      setPracticeWarning(data.warning || null);
+      setPracticeAnswers({});
+    } catch {
+      setPracticeError('Netzwerkfehler beim Erstellen des Tests');
+    } finally {
+      setGeneratingPractice(false);
+    }
+  };
+
+  const normalizePracticeAnswer = (value: string) =>
+    value.toLowerCase().trim().replace(/\s+/g, ' ');
+
+  const isPracticeAnswerCorrect = (question: PracticeQuestion, answer: string): boolean => {
+    const normalized = normalizePracticeAnswer(answer);
+    if (!normalized) return false;
+    if (question.type === 'single_choice') {
+      return normalized === normalizePracticeAnswer(question.correctAnswer);
+    }
+    const accepted = [question.correctAnswer, ...(question.acceptableAnswers || [])]
+      .map(normalizePracticeAnswer)
+      .filter(Boolean);
+    return accepted.some(expected => normalized.includes(expected) || expected.includes(normalized));
+  };
+
+  const practiceScore = practiceTest
+    ? practiceTest.questions.filter(q => isPracticeAnswerCorrect(q, practiceAnswers[q.id] || '')).length
+    : 0;
 
   const readyCount = recentDocs.filter(doc => doc.status === 'processed').length;
   const processingCount = recentDocs.filter(doc => doc.status === 'processing').length;
@@ -439,6 +552,205 @@ export default function HomePage() {
           )}
               </section>
       )}
+
+            {!showPractice && (
+              <button
+                type="button"
+                onClick={() => setShowPractice(true)}
+                onDragOver={e => { e.preventDefault(); setPracticeDragOver(true); }}
+                onDragLeave={() => setPracticeDragOver(false)}
+                onDrop={e => {
+                  e.preventDefault();
+                  setPracticeDragOver(false);
+                  const dropped = e.dataTransfer.files?.[0];
+                  if (dropped) {
+                    setShowPractice(true);
+                    handlePracticeFileSelect(dropped);
+                  }
+                }}
+                className={`cyber-upload w-full rounded-2xl border-2 border-dashed px-5 py-7 text-left cursor-pointer transition-all sm:px-7 ${practiceDragOver ? 'border-[#ff2bd6] scale-[1.01]' : 'border-[var(--border)] hover:border-[#ff2bd6]'}`}
+              >
+                <span className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="flex items-center gap-4">
+                    <span className="cyber-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </span>
+                    <span>
+                      <span className="block text-lg font-extrabold text-[var(--text)]">Lernziel-Test erstellen</span>
+                      <span className="block text-sm text-[var(--text-muted)]">Lernziele hochladen oder einfügen und daraus einen Übungstest generieren.</span>
+                    </span>
+                  </span>
+                  <span className="inline-flex w-fit items-center rounded-full bg-[rgba(255,43,214,0.14)] px-3 py-1 text-xs font-bold text-[#ff7be5]">Trainer starten</span>
+                </span>
+              </button>
+            )}
+
+            {showPractice && (
+              <section className="cyber-panel rounded-2xl p-4 sm:p-6">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="font-serif text-2xl font-bold leading-none text-white">Lernziel-Test</h2>
+                    <p className="mt-2 text-sm text-[var(--text-muted)]">Aus Modul-Lernzielen wird ein interaktiver Übungstest.</p>
+                  </div>
+                  <button onClick={closePractice} className="p-2 rounded-full hover:bg-[var(--surface)] border border-transparent bg-transparent cursor-pointer text-[var(--text-muted)] hover:text-[var(--text)]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+
+                <form onSubmit={handlePracticeGenerate} className="space-y-4">
+                  <div
+                    className="cyber-upload rounded-2xl border-2 border-dashed border-[var(--border)] p-5 text-center transition-colors hover:border-[#ff2bd6] cursor-pointer"
+                    onClick={() => practiceFileInputRef.current?.click()}
+                  >
+                    <input
+                      ref={practiceFileInputRef}
+                      type="file"
+                      accept=".pdf,.docx,.doc,.txt,.md,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      onChange={e => handlePracticeFileSelect(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    {practiceFile ? (
+                      <div>
+                        <p className="font-semibold text-[var(--text)]">{practiceFile.name}</p>
+                        <p className="text-sm text-[var(--text-muted)]">{(practiceFile.size / 1024).toFixed(1)} KB Lernziele geladen</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="font-semibold text-[var(--text)]">Lernziel-Datei auswählen</p>
+                        <p className="text-sm text-[var(--text-muted)]">PDF, Word oder TXT. Du kannst die Lernziele auch unten einfügen.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <textarea
+                    value={practiceText}
+                    onChange={e => { setPracticeText(e.target.value); setPracticeError(null); }}
+                    placeholder="Oder Lernziele hier einfügen..."
+                    rows={5}
+                    className="w-full resize-y rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[var(--text)] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)]"
+                  />
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input
+                      value={practiceModuleNumber}
+                      onChange={e => setPracticeModuleNumber(e.target.value)}
+                      placeholder="Modul, z.B. 164"
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)]"
+                    />
+                    <input
+                      value={practiceTopic}
+                      onChange={e => setPracticeTopic(e.target.value)}
+                      placeholder="Thema, z.B. SQL Injection"
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)]"
+                    />
+                  </div>
+
+                  {providers.length > 0 && (
+                    <div className="rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
+                      <label className="mb-1.5 block text-sm font-medium text-[var(--text)]">Test-Modell</label>
+                      <select
+                        value={selectedPracticeModel}
+                        onChange={(e) => setSelectedPracticeModel(e.target.value)}
+                        className="w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--input-bg)] text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)] transition-all"
+                      >
+                        {providers.map(p => {
+                          const models = getProviderModels(p);
+                          const groupLabel = `${p.name} (${PROVIDER_LABELS[p.type] || p.type})`;
+                          return (
+                            <optgroup key={p.id} label={groupLabel}>
+                              {models.length > 0 ? models.map(m => (
+                                <option key={`${p.id}:${m}`} value={`${p.id}:${m}`}>{m}</option>
+                              )) : (
+                                <option key={`${p.id}:${p.model || ''}`} value={`${p.id}:${p.model || ''}`}>{p.model || 'Kein Modell'}</option>
+                              )}
+                            </optgroup>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
+
+                  {practiceError && <div className="rounded-xl bg-[var(--error-bg)] p-3 text-sm font-medium text-[var(--error)]">{practiceError}</div>}
+                  {practiceWarning && <div className="rounded-xl border border-[var(--border)] bg-[var(--accent-light)] p-3 text-sm text-[var(--accent-dark)]">{practiceWarning}</div>}
+
+                  <button type="submit" disabled={generatingPractice || (!practiceFile && !practiceText.trim())} className="cyber-primary flex w-full items-center justify-center gap-2 rounded-xl border-none px-5 py-3.5 font-semibold text-white transition-colors disabled:opacity-50">
+                    {generatingPractice ? <><div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />Test wird erstellt...</> : 'Lernziel-Test generieren'}
+                  </button>
+                </form>
+
+                {practiceTest && (
+                  <div className="mt-6 space-y-4">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h3 className="text-lg font-extrabold text-white">{practiceTest.title}</h3>
+                          <p className="text-sm text-[var(--text-muted)]">{practiceTest.questions.length} Fragen aus {practiceTest.objectives.length} Lernzielen</p>
+                        </div>
+                        {practiceChecked && (
+                          <div className="rounded-xl bg-[var(--accent-light)] px-3 py-2 text-sm font-bold text-[var(--accent-dark)]">
+                            Score: {practiceScore}/{practiceTest.questions.length}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {practiceTest.questions.map((question, index) => {
+                      const answer = practiceAnswers[question.id] || '';
+                      const correct = isPracticeAnswerCorrect(question, answer);
+                      return (
+                        <div key={question.id} className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] p-4">
+                          <div className="mb-3 flex items-start gap-3">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-light)] text-xs font-black text-[var(--accent-dark)]">{index + 1}</span>
+                            <div>
+                              <p className="font-semibold text-[var(--text)]">{question.question}</p>
+                              {question.objective && <p className="mt-1 text-xs text-[var(--text-muted)]">Lernziel: {question.objective}</p>}
+                            </div>
+                          </div>
+
+                          {question.type === 'single_choice' && question.options ? (
+                            <div className="grid gap-2">
+                              {question.options.map(option => (
+                                <label key={option} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 text-sm transition-all ${answer === option ? 'border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent-dark)]' : 'border-[var(--border)] bg-[rgba(255,255,255,0.02)] text-[var(--text)] hover:border-[var(--accent)]'}`}>
+                                  <input
+                                    type="radio"
+                                    name={question.id}
+                                    value={option}
+                                    checked={answer === option}
+                                    onChange={() => { setPracticeAnswers(prev => ({ ...prev, [question.id]: option })); setPracticeChecked(false); }}
+                                  />
+                                  <span>{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                          ) : (
+                            <textarea
+                              value={answer}
+                              onChange={e => { setPracticeAnswers(prev => ({ ...prev, [question.id]: e.target.value })); setPracticeChecked(false); }}
+                              placeholder="Deine Antwort..."
+                              rows={3}
+                              className="w-full resize-y rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-light)]"
+                            />
+                          )}
+
+                          {practiceChecked && (
+                            <div className={`mt-3 rounded-xl border p-3 text-sm ${correct ? 'border-[rgba(56,248,167,0.28)] bg-[var(--success-bg)] text-[var(--success)]' : 'border-[rgba(255,107,154,0.28)] bg-[var(--error-bg)] text-[var(--error)]'}`}>
+                              <div className="font-bold">{correct ? 'Richtig' : 'Noch nicht ganz'}</div>
+                              {!correct && <div className="mt-1 text-[var(--text)]">Musterlösung: {question.correctAnswer}</div>}
+                              {question.explanation && <div className="mt-1 text-[var(--text-muted)]">{question.explanation}</div>}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    <div className="flex flex-wrap gap-3">
+                      <button type="button" onClick={() => setPracticeChecked(true)} className="cyber-primary rounded-xl border-none px-4 py-2 text-sm font-bold text-white">Antworten prüfen</button>
+                      <button type="button" onClick={() => { setPracticeAnswers({}); setPracticeChecked(false); }} className="rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-2 text-sm font-bold text-[var(--text)] hover:bg-[var(--surface)]">Zurücksetzen</button>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
           </div>
 
           <aside className="space-y-5">
