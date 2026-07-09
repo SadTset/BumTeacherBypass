@@ -301,39 +301,71 @@ export default function HomePage() {
   return (
     <div className="cyber-stage min-h-screen overflow-x-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-8 text-[var(--text)]">
       <div className="mx-auto max-w-7xl min-w-0">
-        <header className="cyber-panel cyber-hero mb-6 overflow-hidden rounded-[2rem] text-white">
-          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
-            <div>
-              <div className="cyber-kicker mb-5 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
-                <span className="cyber-hot-dot h-2 w-2 rounded-full" />
-                Interaktive Arbeitsblätter
-              </div>
-              <h1 className="cyber-title max-w-3xl font-serif text-3xl font-extrabold leading-tight sm:text-5xl">
-                Dokumente rein, Übungsoberfläche raus.
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#a9c7d8] sm:text-base">
-                Lade PDFs oder Word-Dateien hoch, lass sie strukturieren und arbeite direkt mit den generierten Aufgaben weiter.
-              </p>
+        <header className="mb-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-stretch">
+          <section className="cyber-panel cyber-hero overflow-hidden rounded-[2rem] p-5 text-white sm:p-6">
+            <div className="cyber-kicker mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
+              <span className="cyber-hot-dot h-2 w-2 rounded-full" />
+              Workspace Online
             </div>
-            <div className="grid min-w-0 grid-cols-3 gap-2 rounded-2xl border border-[var(--border)] bg-black/20 p-2">
-              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
-                <div className="text-2xl font-extrabold text-[var(--accent-dark)]">{recentDocs.length}</div>
-                <div className="truncate text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">zuletzt</div>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <div>
+                <h1 className="cyber-title max-w-3xl font-serif text-3xl font-extrabold leading-tight sm:text-4xl">
+                  Command Deck
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#a9c7d8] sm:text-base">
+                  Wähle einen Workflow, lade Material rein und lass die KI daraus interaktive Lernoberflächen bauen.
+                </p>
               </div>
-              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
-                <div className="text-2xl font-extrabold text-[var(--success)]">{readyCount}</div>
-                <div className="truncate text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">bereit</div>
-              </div>
-              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
-                <div className="text-2xl font-extrabold text-[#ff7be5]">{processingCount}</div>
-                <div className="truncate text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">aktiv</div>
+              <div className="hidden rounded-2xl border border-[var(--border)] bg-black/20 px-4 py-3 text-right lg:block">
+                <div className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Mode</div>
+                <div className="mt-1 text-lg font-black text-[var(--accent-dark)]">{showPractice ? 'Trainer' : showUpload ? 'Upload' : 'Standby'}</div>
               </div>
             </div>
-          </div>
+          </section>
+
+          <section className="cyber-panel rounded-[2rem] p-4 sm:p-5">
+            <div className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Quick Launch</div>
+            <div className="grid gap-3">
+              <button
+                type="button"
+                onClick={() => setShowUpload(true)}
+                className="cyber-card flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3 text-left text-[var(--text)]"
+              >
+                <span>
+                  <span className="block text-sm font-black text-white">Arbeitsblatt</span>
+                  <span className="block text-xs text-[var(--text-muted)]">PDF/Word konvertieren</span>
+                </span>
+                <span className="text-xl font-black text-[var(--accent-dark)]">+</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPractice(true)}
+                className="cyber-card flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3 text-left text-[var(--text)]"
+              >
+                <span>
+                  <span className="block text-sm font-black text-white">Lernziel-Test</span>
+                  <span className="block text-xs text-[var(--text-muted)]">Trainer generieren</span>
+                </span>
+                <span className="text-xl font-black text-[#ff7be5]">+</span>
+              </button>
+            </div>
+          </section>
         </header>
 
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-          <main className="min-w-0 space-y-5">
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[330px_minmax(0,1fr)] xl:items-start">
+          <main className="order-1 min-w-0 space-y-5 xl:order-2">
+            <section className="cyber-panel rounded-2xl p-4 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Active Workspace</div>
+                  <h2 className="mt-1 text-xl font-black text-white">Build Surface</h2>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-bold">
+                  <span className={`rounded-full border px-3 py-1 ${showUpload ? 'border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent-dark)]' : 'border-[var(--border)] bg-[var(--input-bg)] text-[var(--text-muted)]'}`}>Upload</span>
+                  <span className={`rounded-full border px-3 py-1 ${showPractice ? 'border-[#ff2bd6] bg-[rgba(255,43,214,0.14)] text-[#ff7be5]' : 'border-[var(--border)] bg-[var(--input-bg)] text-[var(--text-muted)]'}`}>Trainer</span>
+                </div>
+              </div>
+            </section>
       {!showUpload && (
         <button
           type="button"
@@ -721,7 +753,7 @@ export default function HomePage() {
             )}
           </main>
 
-          <aside className="min-w-0 space-y-5 xl:sticky xl:top-8 xl:self-start">
+          <aside className="order-2 min-w-0 space-y-5 xl:order-1 xl:sticky xl:top-8 xl:self-start">
             <section className="cyber-panel rounded-2xl p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>

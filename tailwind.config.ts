@@ -23,9 +23,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ['Crimson Pro', 'serif'],
+        serif: ['Space Grotesk', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
-        sans: ['DM Sans', 'sans-serif'],
+        sans: ['Space Grotesk', 'sans-serif'],
       },
     },
   },
