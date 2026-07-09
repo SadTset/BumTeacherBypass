@@ -35,12 +35,12 @@ function isActive(pathname: string, href: string): boolean {
 function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <a href="/" className="flex items-center gap-2.5 no-underline">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-[0_8px_22px_rgba(15,118,110,0.35)]" style={{ background: 'var(--accent-grad)' }}>
+      <span className="cyber-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white">
         <Icon name="book" size={17} />
       </span>
       {!compact && (
         <span className="text-[0.95rem] font-bold tracking-tight text-white leading-tight">
-          BumTeacher<span className="text-[#facc15]">Bypass</span>
+          BumTeacher<span className="text-[#ff7be5] drop-shadow-[0_0_10px_rgba(255,43,214,0.55)]">Bypass</span>
         </span>
       )}
     </a>
@@ -88,7 +88,7 @@ function LibraryTree({ pathname }: { pathname: string }) {
 
   const rowCls = (active: boolean, indent: string) =>
     `flex items-center gap-2 rounded-lg ${indent} py-1.5 text-[0.82rem] font-medium no-underline transition-colors ` +
-    (active ? 'bg-white/[0.12] text-white shadow-[inset_2px_0_0_0_#facc15]' : 'text-[#a6b3ad] hover:bg-white/[0.07] hover:text-white');
+    (active ? 'bg-[rgba(34,211,238,0.12)] text-white shadow-[inset_2px_0_0_0_var(--accent)]' : 'text-[#8aa8bd] hover:bg-white/[0.07] hover:text-white');
 
   return (
     <nav className="mt-2 flex flex-col gap-0.5 overflow-y-auto min-h-0" aria-label="Bibliothek">
@@ -103,7 +103,7 @@ function LibraryTree({ pathname }: { pathname: string }) {
           <div key={y}>
             <div className="flex items-center">
               <a href={yHref} className={`flex-1 ${rowCls(yActive, 'px-3')}`}>
-                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[0.7rem] font-bold ${yActive ? 'bg-[#facc15] text-[#16201d]' : 'bg-white/10 text-[#a6b3ad]'}`}>{y}</span>
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[0.7rem] font-bold ${yActive ? 'bg-[var(--accent)] text-[#041018] shadow-[0_0_14px_rgba(34,211,238,0.5)]' : 'bg-white/10 text-[#8aa8bd]'}`}>{y}</span>
                 {y}. Lehrjahr
               </a>
               {hasChildren && (
@@ -112,7 +112,7 @@ function LibraryTree({ pathname }: { pathname: string }) {
                   onClick={() => toggle(yKey)}
                   aria-label={isOpen ? 'Zuklappen' : 'Aufklappen'}
                   aria-expanded={isOpen}
-                  className="shrink-0 p-1.5 mr-1 rounded-md text-[#6f827b] hover:text-white hover:bg-white/5 bg-transparent border-none cursor-pointer"
+                  className="shrink-0 p-1.5 mr-1 rounded-md text-[#66869d] hover:text-white hover:bg-white/5 bg-transparent border-none cursor-pointer"
                 >
                   <span className={`block transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}><Icon name="chevron" size={13} /></span>
                 </button>
@@ -138,7 +138,7 @@ function LibraryTree({ pathname }: { pathname: string }) {
                             onClick={() => toggle(sKey)}
                             aria-label={sOpen ? 'Zuklappen' : 'Aufklappen'}
                             aria-expanded={sOpen}
-                            className="shrink-0 p-1 mr-1 rounded-md text-[#6f827b] hover:text-white hover:bg-white/5 bg-transparent border-none cursor-pointer"
+                            className="shrink-0 p-1 mr-1 rounded-md text-[#66869d] hover:text-white hover:bg-white/5 bg-transparent border-none cursor-pointer"
                           >
                             <span className={`block transition-transform duration-200 ${sOpen ? 'rotate-90' : ''}`}><Icon name="chevron" size={12} /></span>
                           </button>
@@ -151,7 +151,7 @@ function LibraryTree({ pathname }: { pathname: string }) {
                             const mActive = pathname.startsWith(mHref);
                             return (
                               <a key={mod} href={mHref} className={rowCls(mActive, 'px-2.5')}>
-                                <span className="text-[#6f827b]">▸</span> Modul {mod}
+                                <span className="text-[#66869d]">▸</span> Modul {mod}
                               </a>
                             );
                           })}
@@ -175,7 +175,7 @@ export function AppNav() {
   return (
     <>
       {/* ── Desktop sidebar ── */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-60 flex-col px-4 py-5" style={{ background: 'linear-gradient(180deg, #14201d 0%, #0d1718 100%)' }}>
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-60 flex-col border-r border-[rgba(34,211,238,0.18)] px-4 py-5 shadow-[18px_0_60px_rgba(0,0,0,0.28)]" style={{ background: 'linear-gradient(180deg, rgba(9,13,28,0.96) 0%, rgba(5,7,17,0.98) 100%)' }}>
         <div className="px-1 mb-8"><Logo /></div>
 
         <nav className="flex flex-col gap-1" aria-label="Hauptnavigation">
@@ -187,50 +187,49 @@ export function AppNav() {
                 href={item.href}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium no-underline transition-colors ${
                   active
-                    ? 'bg-white/[0.12] text-white shadow-[inset_2px_0_0_0_#facc15]'
-                    : 'text-[#a6b3ad] hover:bg-white/[0.07] hover:text-white'
+                    ? 'bg-[rgba(34,211,238,0.12)] text-white shadow-[inset_2px_0_0_0_var(--accent),0_0_18px_rgba(34,211,238,0.12)]'
+                    : 'text-[#8aa8bd] hover:bg-white/[0.07] hover:text-white'
                 }`}
               >
-                <span className={active ? 'text-[#facc15]' : ''}><Icon name={item.icon} /></span>
+                <span className={active ? 'text-[var(--accent-dark)]' : ''}><Icon name={item.icon} /></span>
                 {item.label}
               </a>
             );
           })}
         </nav>
 
-        <div className="mt-7 px-3 text-[0.65rem] font-semibold uppercase tracking-wider text-[#6f827b]">Bibliothek</div>
+        <div className="mt-7 px-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#66869d]">Bibliothek</div>
         <LibraryTree pathname={pathname} />
 
         <div className="mt-auto">
           <a
             href="/?upload=1"
-            className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white no-underline shadow-[0_8px_24px_rgba(15,118,110,0.38)] hover:shadow-[0_10px_28px_rgba(15,118,110,0.48)] hover:-translate-y-px transition-all"
-            style={{ background: 'var(--accent-grad)' }}
+            className="cyber-primary flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white no-underline hover:-translate-y-px transition-all"
           >
             <Icon name="upload" size={16} />
             Dokument hochladen
           </a>
-          <div className="mt-4 px-1 text-[0.65rem] text-[#6f827b]">Interaktive Arbeitsblätter</div>
+          <div className="mt-4 px-1 text-[0.65rem] text-[#66869d]">Interaktive Arbeitsblätter</div>
         </div>
       </aside>
 
       {/* ── Mobile top bar ── */}
-      <header className="lg:hidden sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--card)]/75 backdrop-blur-xl">
+      <header className="lg:hidden sticky top-0 z-40 border-b border-[var(--border)] bg-[rgba(7,11,24,0.82)] backdrop-blur-xl">
         <div className="flex items-center justify-between px-4 py-2.5">
           <a href="/" className="flex items-center gap-2 no-underline">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-[0_6px_16px_rgba(15,118,110,0.35)]" style={{ background: 'var(--accent-grad)' }}>
+            <span className="cyber-primary flex h-8 w-8 items-center justify-center rounded-lg text-white">
               <Icon name="book" size={15} />
             </span>
             <span className="text-sm font-bold tracking-tight text-[var(--text)]">BumTeacher<span className="text-[var(--accent)]">Bypass</span></span>
           </a>
-          <a href="/?upload=1" aria-label="Dokument hochladen" className="flex h-8 w-8 items-center justify-center rounded-lg text-white no-underline shadow-[0_6px_16px_rgba(15,118,110,0.35)]" style={{ background: 'var(--accent-grad)' }}>
+          <a href="/?upload=1" aria-label="Dokument hochladen" className="cyber-primary flex h-8 w-8 items-center justify-center rounded-lg text-white no-underline">
             <Icon name="upload" size={15} />
           </a>
         </div>
       </header>
 
       {/* ── Mobile bottom tabs ── */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--border)] bg-[var(--card)]/85 backdrop-blur-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} aria-label="Hauptnavigation">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--border)] bg-[rgba(7,11,24,0.88)] backdrop-blur-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} aria-label="Hauptnavigation">
         <div className="grid grid-cols-4">
           {NAV.map(item => {
             const active = isActive(pathname, item.href);

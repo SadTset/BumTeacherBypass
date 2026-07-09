@@ -41,10 +41,10 @@ interface RecentDoc {
 }
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  processed: { label: 'Bereit', cls: 'bg-[var(--success-bg)] text-[var(--success)]' },
-  processing: { label: 'In Arbeit', cls: 'bg-[var(--accent-light)] text-[var(--accent-dark)] animate-pulse' },
-  uploaded: { label: 'Wartet', cls: 'bg-[var(--surface)] text-[var(--text-muted)]' },
-  error: { label: 'Fehler', cls: 'bg-[var(--error-bg)] text-[var(--error)]' },
+  processed: { label: 'Bereit', cls: 'bg-[var(--success-bg)] text-[var(--success)] border border-[rgba(56,248,167,0.28)]' },
+  processing: { label: 'In Arbeit', cls: 'bg-[var(--accent-light)] text-[var(--accent-dark)] border border-[rgba(34,211,238,0.28)] animate-pulse' },
+  uploaded: { label: 'Wartet', cls: 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)]' },
+  error: { label: 'Fehler', cls: 'bg-[var(--error-bg)] text-[var(--error)] border border-[rgba(255,107,154,0.28)]' },
 };
 
 function formatDate(iso: string): string {
@@ -193,34 +193,34 @@ export default function HomePage() {
   const processingCount = recentDocs.filter(doc => doc.status === 'processing').length;
 
   return (
-    <div className="min-h-screen px-4 py-5 sm:px-6 lg:px-8 lg:py-8 text-[var(--text)]">
+    <div className="cyber-stage min-h-screen px-4 py-5 sm:px-6 lg:px-8 lg:py-8 text-[var(--text)]">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-6 overflow-hidden rounded-[2rem] border border-white/10 bg-[#16201d] text-white shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+        <header className="cyber-panel cyber-hero mb-6 overflow-hidden rounded-[2rem] text-white">
           <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
             <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/[0.15] bg-white/[0.08] px-3 py-1 text-xs font-semibold text-[#f8e7b0]">
-                <span className="h-2 w-2 rounded-full bg-[#facc15]" />
+              <div className="cyber-kicker mb-5 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
+                <span className="cyber-hot-dot h-2 w-2 rounded-full" />
                 Interaktive Arbeitsblätter
               </div>
-              <h1 className="max-w-3xl font-serif text-3xl font-extrabold leading-tight text-white sm:text-5xl">
+              <h1 className="cyber-title max-w-3xl font-serif text-3xl font-extrabold leading-tight sm:text-5xl">
                 Dokumente rein, Übungsoberfläche raus.
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#c7d5cf] sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#a9c7d8] sm:text-base">
                 Lade PDFs oder Word-Dateien hoch, lass sie strukturieren und arbeite direkt mit den generierten Aufgaben weiter.
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/[0.12] bg-white/[0.08] p-2">
-              <div className="rounded-xl bg-white/10 px-3 py-3">
-                <div className="text-2xl font-extrabold">{recentDocs.length}</div>
-                <div className="text-[0.72rem] font-medium text-[#c7d5cf]">zuletzt</div>
+            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-[var(--border)] bg-black/20 p-2">
+              <div className="cyber-stat rounded-xl px-3 py-3">
+                <div className="text-2xl font-extrabold text-[var(--accent-dark)]">{recentDocs.length}</div>
+                <div className="text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">zuletzt</div>
               </div>
-              <div className="rounded-xl bg-white/10 px-3 py-3">
-                <div className="text-2xl font-extrabold">{readyCount}</div>
-                <div className="text-[0.72rem] font-medium text-[#c7d5cf]">bereit</div>
+              <div className="cyber-stat rounded-xl px-3 py-3">
+                <div className="text-2xl font-extrabold text-[var(--success)]">{readyCount}</div>
+                <div className="text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">bereit</div>
               </div>
-              <div className="rounded-xl bg-white/10 px-3 py-3">
-                <div className="text-2xl font-extrabold">{processingCount}</div>
-                <div className="text-[0.72rem] font-medium text-[#c7d5cf]">aktiv</div>
+              <div className="cyber-stat rounded-xl px-3 py-3">
+                <div className="text-2xl font-extrabold text-[#ff7be5]">{processingCount}</div>
+                <div className="text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">aktiv</div>
               </div>
             </div>
           </div>
@@ -228,21 +228,21 @@ export default function HomePage() {
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)]">
           <div className="space-y-5">
-            <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.14)] sm:p-5">
+            <section className="cyber-panel rounded-2xl p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold">Bibliothek</h2>
+                  <h2 className="text-base font-bold text-white">Bibliothek</h2>
                   <p className="text-sm text-[var(--text-muted)]">Spring direkt in ein Lehrjahr.</p>
                 </div>
-                <Link href="/compendium" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-dark)] no-underline hover:border-[var(--accent)]">
+                <Link href="/compendium" className="cyber-card inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-dark)] no-underline">
                   Kompendium
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </Link>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[1, 2, 3, 4].map(y => (
-                  <Link key={y} href={`/worksheets/year-${y}`} className="group rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-4 no-underline text-[var(--text)] transition-all hover:-translate-y-0.5 hover:border-[var(--accent)] hover:bg-[var(--card-hover)] hover:shadow-[0_14px_30px_rgba(15,19,22,0.12)]">
-                    <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-light)] text-lg font-black text-[var(--accent-dark)]">{y}</span>
+                  <Link key={y} href={`/worksheets/year-${y}`} className="cyber-card group rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-4 no-underline text-[var(--text)]">
+                    <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-light)] text-lg font-black text-[var(--accent-dark)] shadow-[0_0_18px_rgba(34,211,238,0.18)]">{y}</span>
                     <span className="block text-sm font-bold">{YEAR_LABELS[String(y)]}</span>
                     <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-muted)] group-hover:text-[var(--accent-dark)]">
                       Öffnen
@@ -265,11 +265,11 @@ export default function HomePage() {
             const dropped = e.dataTransfer.files?.[0];
             if (dropped) { setShowUpload(true); handleFileSelect(dropped); }
           }}
-                className={`w-full rounded-2xl border-2 border-dashed px-5 py-7 text-left cursor-pointer transition-all sm:px-7 ${dragOver ? 'border-[var(--accent)] bg-[var(--card)] scale-[1.01]' : 'border-[var(--border)] bg-[var(--card)]/95 hover:border-[var(--accent)] hover:bg-[var(--card-hover)]'}`}
+                className={`cyber-upload w-full rounded-2xl border-2 border-dashed px-5 py-7 text-left cursor-pointer transition-all sm:px-7 ${dragOver ? 'border-[var(--accent)] scale-[1.01]' : 'border-[var(--border)] hover:border-[var(--accent)]'}`}
         >
                 <span className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <span className="flex items-center gap-4">
-                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_12px_28px_rgba(15,118,110,0.3)]" style={{ background: 'var(--accent-grad)' }}>
+                    <span className="cyber-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     </span>
                     <span>
@@ -283,10 +283,10 @@ export default function HomePage() {
       )}
 
       {showUpload && (
-              <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 shadow-[0_16px_50px_rgba(0,0,0,0.14)] sm:p-6">
+              <section className="cyber-panel rounded-2xl p-4 sm:p-6">
           <div className="flex items-start justify-between gap-4 mb-5">
                   <div>
-                    <h2 className="font-serif text-2xl font-bold leading-none">Dokument hochladen</h2>
+                    <h2 className="font-serif text-2xl font-bold leading-none text-white">Dokument hochladen</h2>
                     <p className="mt-2 text-sm text-[var(--text-muted)]">Quelle, Modelle und Kategorie bleiben wie vorher steuerbar.</p>
                   </div>
             <button onClick={closeUpload} className="p-2 rounded-full hover:bg-[var(--surface)] border border-transparent bg-transparent cursor-pointer text-[var(--text-muted)] hover:text-[var(--text)]">
@@ -296,20 +296,20 @@ export default function HomePage() {
 
           {uploadResult ? (
             <div className="text-center py-6">
-              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2d6a4f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--success-bg)] shadow-[0_0_26px_rgba(56,248,167,0.28)]">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <p className="font-semibold mb-1">{uploadResult.filename} hochgeladen!</p>
               <p className="text-sm text-[var(--text-muted)] mb-4">Dein Dokument wird von der KI verarbeitet. Das kann einige Minuten dauern.</p>
               <div className="flex gap-3 justify-center flex-wrap">
-                <Link href={`/documents/${uploadResult.id}`} className="bg-[var(--accent)] text-white px-4 py-2 rounded-full no-underline font-medium hover:bg-[var(--accent-dark)]">Dokument ansehen</Link>
+                <Link href={`/documents/${uploadResult.id}`} className="cyber-primary px-4 py-2 rounded-full no-underline font-medium text-white">Dokument ansehen</Link>
                 <button onClick={closeUpload} className="bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text)] px-4 py-2 rounded-full font-medium cursor-pointer hover:bg-[var(--surface)]">Schließen</button>
               </div>
             </div>
           ) : (
             <form onSubmit={handleUpload}>
               <div
-                      className="border-2 border-dashed border-[var(--border)] rounded-2xl bg-[var(--input-bg)] p-6 text-center hover:border-[var(--accent)] transition-colors cursor-pointer mb-5"
+                      className="cyber-upload border-2 border-dashed border-[var(--border)] rounded-2xl p-6 text-center hover:border-[var(--accent)] transition-colors cursor-pointer mb-5"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input ref={fileInputRef} type="file" accept=".pdf,.docx,.doc" onChange={e => handleFileSelect(e.target.files?.[0] || null)} className="hidden" />
@@ -330,7 +330,7 @@ export default function HomePage() {
 
               {providers.length > 0 && (
                     <div className="mb-5 grid gap-4 lg:grid-cols-3">
-                      <div className="rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
+                      <div className="cyber-card rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
                       Struktur-Modell (Pass 1)
                     </label>
@@ -355,7 +355,7 @@ export default function HomePage() {
                     </select>
                     <p className="text-xs text-[var(--text-muted)] mt-2">Erstellt die Arbeitsblatt-Struktur.</p>
                   </div>
-                      <div className="rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
+                      <div className="cyber-card rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
                       Anreicherungs-Modell (Pass 2)
                     </label>
@@ -380,7 +380,7 @@ export default function HomePage() {
                     </select>
                     <p className="text-xs text-[var(--text-muted)] mt-2">Fügt Lösungen und Interaktionen hinzu.</p>
                   </div>
-                      <div className="rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
+                      <div className="cyber-card rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
                       Review-Modell (Pass 3)
                     </label>
@@ -409,12 +409,12 @@ export default function HomePage() {
               )}
 
               <div className="mb-5">
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] p-4">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <button
                     type="button"
                     onClick={() => setAutoDetect(!autoDetect)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border-none cursor-pointer ${autoDetect ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border-none cursor-pointer ${autoDetect ? 'bg-[var(--accent)] shadow-[0_0_18px_rgba(34,211,238,0.35)]' : 'bg-[var(--border)]'}`}
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoDetect ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -432,7 +432,7 @@ export default function HomePage() {
 
               {uploadError && <div className="mb-4 p-3 bg-[var(--error-bg)] text-[var(--error)] rounded-lg text-sm font-medium">{uploadError}</div>}
 
-              <button type="submit" disabled={uploading || !file} className="w-full flex items-center justify-center gap-2 bg-[var(--accent)] text-white px-5 py-3.5 rounded-xl font-semibold hover:bg-[var(--accent-dark)] transition-colors disabled:opacity-50 border-none cursor-pointer shadow-[0_12px_28px_rgba(15,118,110,0.24)]">
+              <button type="submit" disabled={uploading || !file} className="cyber-primary w-full flex items-center justify-center gap-2 text-white px-5 py-3.5 rounded-xl font-semibold transition-colors disabled:opacity-50 border-none cursor-pointer">
                 {uploading ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"/>Wird hochgeladen...</> : 'Hochladen & Verarbeiten'}
               </button>
             </form>
@@ -443,10 +443,10 @@ export default function HomePage() {
 
           <aside className="space-y-5">
         {/* Recent documents */}
-            <section className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-[0_16px_50px_rgba(0,0,0,0.14)]">
-              <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--input-bg)]">
+            <section className="cyber-panel rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[rgba(6,12,27,0.72)]">
                 <div>
-                  <h2 className="font-bold text-base">Zuletzt hinzugefügt</h2>
+                  <h2 className="font-bold text-base text-white">Zuletzt hinzugefügt</h2>
                   <p className="text-xs text-[var(--text-muted)]">Deine neuesten Dokumente</p>
                 </div>
             {recentDocs.length > 0 && <span className="text-xs text-[var(--text-muted)]">{recentDocs.length} Dokumente</span>}
@@ -460,8 +460,8 @@ export default function HomePage() {
               {recentDocs.map(doc => {
                 const meta = STATUS_META[doc.status] || STATUS_META.uploaded;
                 return (
-                      <Link key={doc.id} href={`/documents/${doc.id}`} className="flex items-center gap-3 px-5 py-4 no-underline text-[var(--text)] hover:bg-[var(--input-bg)] transition-colors group">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-light)] text-[var(--accent-dark)] transition-transform group-hover:scale-105">
+                      <Link key={doc.id} href={`/documents/${doc.id}`} className="flex items-center gap-3 px-5 py-4 no-underline text-[var(--text)] hover:bg-[var(--input-bg)] transition-all group">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-light)] text-[var(--accent-dark)] transition-transform group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.24)]">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     </span>
                     <span className="flex-1 min-w-0">
@@ -479,10 +479,10 @@ export default function HomePage() {
         </section>
 
         {/* Right rail */}
-            <Link href="/compendium" className="group relative block overflow-hidden rounded-2xl p-5 no-underline text-white shadow-[0_16px_50px_rgba(0,0,0,0.18)]" style={{ background: 'var(--accent-grad)' }}>
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-black/12" />
+            <Link href="/compendium" className="cyber-primary group relative block overflow-hidden rounded-2xl p-5 no-underline text-white">
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-black/25" />
               <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.15]">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.15] shadow-[0_0_24px_rgba(255,255,255,0.12)]">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                 </div>
                 <div className="flex items-center gap-2 font-bold mb-1">
