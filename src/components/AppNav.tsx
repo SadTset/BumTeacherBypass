@@ -174,62 +174,55 @@ export function AppNav() {
 
   return (
     <>
-      {/* ── Desktop sidebar ── */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-60 flex-col border-r border-[rgba(34,211,238,0.18)] px-4 py-5 shadow-[18px_0_60px_rgba(0,0,0,0.28)]" style={{ background: 'linear-gradient(180deg, rgba(9,13,28,0.96) 0%, rgba(5,7,17,0.98) 100%)' }}>
-        <div className="px-1 mb-8"><Logo /></div>
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-[rgba(34,211,238,0.18)] bg-[rgba(7,11,24,0.86)] shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <Logo />
 
-        <nav className="flex flex-col gap-1" aria-label="Hauptnavigation">
-          {NAV.map(item => {
-            const active = isActive(pathname, item.href);
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium no-underline transition-colors ${
-                  active
-                    ? 'bg-[rgba(34,211,238,0.12)] text-white shadow-[inset_2px_0_0_0_var(--accent),0_0_18px_rgba(34,211,238,0.12)]'
-                    : 'text-[#8aa8bd] hover:bg-white/[0.07] hover:text-white'
-                }`}
-              >
-                <span className={active ? 'text-[var(--accent-dark)]' : ''}><Icon name={item.icon} /></span>
-                {item.label}
-              </a>
-            );
-          })}
-        </nav>
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Hauptnavigation">
+            {NAV.map(item => {
+              const active = isActive(pathname, item.href);
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium no-underline transition-colors ${
+                    active
+                      ? 'bg-[rgba(34,211,238,0.12)] text-white shadow-[0_0_18px_rgba(34,211,238,0.12)]'
+                      : 'text-[#8aa8bd] hover:bg-white/[0.07] hover:text-white'
+                  }`}
+                >
+                  <span className={active ? 'text-[var(--accent-dark)]' : ''}><Icon name={item.icon} size={16} /></span>
+                  {item.label}
+                </a>
+              );
+            })}
 
-        <div className="mt-7 px-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#66869d]">Bibliothek</div>
-        <LibraryTree pathname={pathname} />
+            <details className="group relative">
+              <summary className={`flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/worksheets') ? 'bg-[rgba(34,211,238,0.12)] text-white' : 'text-[#8aa8bd] hover:bg-white/[0.07] hover:text-white'}`}>
+                <Icon name="book" size={16} />
+                Bibliothek
+                <span className="transition-transform group-open:rotate-90"><Icon name="chevron" size={12} /></span>
+              </summary>
+              <div className="absolute right-0 top-[calc(100%+0.75rem)] w-80 rounded-2xl border border-[var(--border)] bg-[rgba(7,11,24,0.96)] p-3 shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
+                <div className="px-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#66869d]">Bibliothek</div>
+                <LibraryTree pathname={pathname} />
+              </div>
+            </details>
+          </nav>
 
-        <div className="mt-auto">
           <a
             href="/?upload=1"
-            className="cyber-primary flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white no-underline hover:-translate-y-px transition-all"
+            aria-label="Dokument hochladen"
+            className="cyber-primary flex h-10 w-10 items-center justify-center rounded-xl text-white no-underline md:h-auto md:w-auto md:gap-2 md:px-4 md:py-2.5 md:text-sm md:font-semibold"
           >
             <Icon name="upload" size={16} />
-            Dokument hochladen
-          </a>
-          <div className="mt-4 px-1 text-[0.65rem] text-[#66869d]">Interaktive Arbeitsblätter</div>
-        </div>
-      </aside>
-
-      {/* ── Mobile top bar ── */}
-      <header className="lg:hidden sticky top-0 z-40 border-b border-[var(--border)] bg-[rgba(7,11,24,0.82)] backdrop-blur-xl">
-        <div className="flex items-center justify-between px-4 py-2.5">
-          <a href="/" className="flex items-center gap-2 no-underline">
-            <span className="cyber-primary flex h-8 w-8 items-center justify-center rounded-lg text-white">
-              <Icon name="book" size={15} />
-            </span>
-            <span className="text-sm font-bold tracking-tight text-[var(--text)]">BumTeacher<span className="text-[var(--accent)]">Bypass</span></span>
-          </a>
-          <a href="/?upload=1" aria-label="Dokument hochladen" className="cyber-primary flex h-8 w-8 items-center justify-center rounded-lg text-white no-underline">
-            <Icon name="upload" size={15} />
+            <span className="hidden md:inline">Hochladen</span>
           </a>
         </div>
       </header>
 
       {/* ── Mobile bottom tabs ── */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--border)] bg-[rgba(7,11,24,0.88)] backdrop-blur-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} aria-label="Hauptnavigation">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--border)] bg-[rgba(7,11,24,0.88)] backdrop-blur-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} aria-label="Hauptnavigation">
         <div className="grid grid-cols-4">
           {NAV.map(item => {
             const active = isActive(pathname, item.href);

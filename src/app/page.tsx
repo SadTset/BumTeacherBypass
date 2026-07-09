@@ -26,7 +26,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   anthropic: 'Anthropic',
   ollama: 'Ollama',
   'ollama-cloud': 'Ollama Cloud',
-  'openai-compatible': 'OpenAI-Compatible',
+  'openai-compatible': 'OpenAI-kompatibel',
 };
 
 interface RecentDoc {
@@ -207,7 +207,7 @@ export default function HomePage() {
       if (topic) formData.append('topic', topic);
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
-      if (!res.ok) { setUploadError(data.error || 'Upload fehlgeschlagen'); return; }
+      if (!res.ok) { setUploadError(data.error || 'Hochladen fehlgeschlagen'); return; }
       setUploadResult({ id: data.id, filename: data.filename });
     } catch { setUploadError('Netzwerkfehler'); }
     finally { setUploading(false); }
@@ -299,130 +299,140 @@ export default function HomePage() {
   const processingCount = recentDocs.filter(doc => doc.status === 'processing').length;
 
   return (
-    <div className="cyber-stage min-h-screen overflow-x-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-8 text-[var(--text)]">
-      <div className="mx-auto max-w-7xl min-w-0">
-        <header className="mb-5">
-          <section className="cyber-panel rounded-[1.5rem] px-4 py-3 sm:px-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="cyber-hot-dot h-2.5 w-2.5 shrink-0 rounded-full" />
-                <div className="min-w-0">
-                  <div className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Workspace Online</div>
-                  <h1 className="truncate text-2xl font-black text-white sm:text-3xl">Command Deck</h1>
-                </div>
+    <div className="cyber-stage min-h-screen overflow-x-hidden px-4 py-5 text-[var(--text)] sm:px-6 lg:px-8 lg:py-8">
+      <div className="mx-auto flex max-w-7xl min-w-0 flex-col gap-6">
+        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-stretch">
+          <div className="cyber-panel overflow-hidden rounded-[1.75rem] p-5 sm:p-6">
+            <div className="mb-8 flex flex-wrap items-center gap-2 text-xs font-bold">
+              <span className="rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1 text-[var(--accent-dark)]">Arbeitsbereich aktiv</span>
+              <span className="rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1 text-[#ff7be5]">{showPractice ? 'Übungstest' : showUpload ? 'Hochladen' : 'Bereit'}</span>
+            </div>
+            <div className="max-w-3xl">
+              <div className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[var(--text-muted)]">BumTeacherBypass</div>
+              <h1 className="mt-2 text-4xl font-black leading-tight text-white sm:text-5xl">Materialzentrale</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#a9c7d8] sm:text-base">
+                Dokumente hochladen, Lernziele testen und deine zuletzt verarbeiteten Arbeitsblätter ohne Umwege erreichen.
+              </p>
+            </div>
+          </div>
+
+          <div className="cyber-panel rounded-[1.75rem] p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Systemstatus</div>
+                <h2 className="mt-1 text-xl font-black text-white">Verarbeitung</h2>
               </div>
-              <div className="flex flex-wrap gap-2 text-xs font-bold">
-                <span className="rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1 text-[var(--accent-dark)]">{providers.length || 0} Provider</span>
-                <span className="rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1 text-[var(--success)]">{readyCount} bereit</span>
-                <span className="rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1 text-[#ff7be5]">{showPractice ? 'Trainer' : showUpload ? 'Upload' : 'Standby'}</span>
+              <span className="cyber-hot-dot h-2.5 w-2.5 rounded-full" />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
+                <div className="text-xl font-extrabold text-[var(--accent-dark)]">{recentDocs.length}</div>
+                <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Dokumente</div>
+              </div>
+              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
+                <div className="text-xl font-extrabold text-[var(--success)]">{readyCount}</div>
+                <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Fertig</div>
+              </div>
+              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
+                <div className="text-xl font-extrabold text-[#ff7be5]">{processingCount}</div>
+                <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Aktiv</div>
               </div>
             </div>
-          </section>
-        </header>
+            <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-3">
+              <div className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">KI-Anbieter</div>
+              <div className="mt-1 text-sm font-semibold text-[var(--text)]">{providers.length > 0 ? `${providers.length} konfiguriert` : 'Nicht konfiguriert'}</div>
+            </div>
+          </div>
+        </section>
 
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[280px_minmax(0,1fr)_340px] xl:items-start">
-          <aside className="order-1 min-w-0 space-y-5 xl:sticky xl:top-8 xl:self-start">
-            <section className="cyber-panel rounded-2xl p-4">
-              <div className="mb-4">
-                <div className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Switchboard</div>
-                <h2 className="mt-1 text-xl font-black text-white">Workflows</h2>
-              </div>
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowUpload(true)}
-                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={e => {
-                    e.preventDefault();
-                    setDragOver(false);
-                    const dropped = e.dataTransfer.files?.[0];
-                    if (dropped) { setShowUpload(true); handleFileSelect(dropped); }
-                  }}
-                  className={`cyber-card rounded-2xl border px-4 py-4 text-left ${showUpload || dragOver ? 'border-[var(--accent)] bg-[var(--accent-light)]' : 'border-[var(--border)] bg-[var(--input-bg)]'}`}
-                >
-                  <span className="block text-sm font-black text-white">Arbeitsblatt</span>
-                  <span className="mt-1 block text-xs text-[var(--text-muted)]">PDF/Word in Aufgaben umwandeln</span>
-                  <span className="mt-4 inline-flex rounded-full bg-[var(--accent-light)] px-3 py-1 text-xs font-black text-[var(--accent-dark)]">Upload</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowPractice(true)}
-                  onDragOver={e => { e.preventDefault(); setPracticeDragOver(true); }}
-                  onDragLeave={() => setPracticeDragOver(false)}
-                  onDrop={e => {
-                    e.preventDefault();
-                    setPracticeDragOver(false);
-                    const dropped = e.dataTransfer.files?.[0];
-                    if (dropped) {
-                      setShowPractice(true);
-                      handlePracticeFileSelect(dropped);
-                    }
-                  }}
-                  className={`cyber-card rounded-2xl border px-4 py-4 text-left ${showPractice || practiceDragOver ? 'border-[#ff2bd6] bg-[rgba(255,43,214,0.14)]' : 'border-[var(--border)] bg-[var(--input-bg)]'}`}
-                >
-                  <span className="block text-sm font-black text-white">Lernziel-Test</span>
-                  <span className="mt-1 block text-xs text-[var(--text-muted)]">Aus Lernzielen einen Trainer bauen</span>
-                  <span className="mt-4 inline-flex rounded-full bg-[rgba(255,43,214,0.14)] px-3 py-1 text-xs font-black text-[#ff7be5]">Trainer</span>
-                </button>
-              </div>
-            </section>
+        <section className="grid gap-3 md:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setShowUpload(true)}
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => {
+              e.preventDefault();
+              setDragOver(false);
+              const dropped = e.dataTransfer.files?.[0];
+              if (dropped) { setShowUpload(true); handleFileSelect(dropped); }
+            }}
+            className={`cyber-panel group min-h-40 rounded-[1.5rem] p-5 text-left transition-all ${showUpload || dragOver ? 'border-[var(--accent)] bg-[var(--accent-light)]' : 'hover:border-[var(--accent)]'}`}
+          >
+            <span className="flex items-start justify-between gap-4">
+              <span>
+                <span className="block text-[0.65rem] font-black uppercase tracking-[0.2em] text-[var(--accent-dark)]">Arbeitsblatt</span>
+                <span className="mt-2 block text-2xl font-black text-white">Dokument hochladen</span>
+                <span className="mt-2 block max-w-md text-sm leading-6 text-[var(--text-muted)]">PDF oder Word auswählen, automatisch einordnen und als interaktives Arbeitsblatt verarbeiten.</span>
+              </span>
+              <span className="cyber-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white transition-transform group-hover:scale-110">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </span>
+            </span>
+          </button>
 
-            <section className="cyber-panel rounded-2xl p-4">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-bold text-white">System Pulse</h2>
-                  <p className="text-sm text-[var(--text-muted)]">Pipeline-Status</p>
-                </div>
-                <span className="cyber-hot-dot h-2.5 w-2.5 rounded-full" />
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
-                  <div className="text-xl font-extrabold text-[var(--accent-dark)]">{recentDocs.length}</div>
-                  <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Docs</div>
-                </div>
-                <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
-                  <div className="text-xl font-extrabold text-[var(--success)]">{readyCount}</div>
-                  <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Fertig</div>
-                </div>
-                <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
-                  <div className="text-xl font-extrabold text-[#ff7be5]">{processingCount}</div>
-                  <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Aktiv</div>
-                </div>
-              </div>
-            </section>
-          </aside>
+          <button
+            type="button"
+            onClick={() => setShowPractice(true)}
+            onDragOver={e => { e.preventDefault(); setPracticeDragOver(true); }}
+            onDragLeave={() => setPracticeDragOver(false)}
+            onDrop={e => {
+              e.preventDefault();
+              setPracticeDragOver(false);
+              const dropped = e.dataTransfer.files?.[0];
+              if (dropped) {
+                setShowPractice(true);
+                handlePracticeFileSelect(dropped);
+              }
+            }}
+            className={`cyber-panel group min-h-40 rounded-[1.5rem] p-5 text-left transition-all ${showPractice || practiceDragOver ? 'border-[#ff2bd6] bg-[rgba(255,43,214,0.14)]' : 'hover:border-[#ff2bd6]'}`}
+          >
+            <span className="flex items-start justify-between gap-4">
+              <span>
+                <span className="block text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#ff7be5]">Lernziele</span>
+                <span className="mt-2 block text-2xl font-black text-white">Übungstest erstellen</span>
+                <span className="mt-2 block max-w-md text-sm leading-6 text-[var(--text-muted)]">Lernziele hochladen oder einfügen und daraus einen interaktiven Test generieren.</span>
+              </span>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#ff2bd6] bg-[rgba(255,43,214,0.14)] text-[#ff7be5] transition-transform group-hover:scale-110">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </span>
+            </span>
+          </button>
+        </section>
 
-          <main className="order-2 min-w-0 space-y-5">
+        <section className="min-w-0 space-y-6">
+          <main className="min-w-0 space-y-5">
             <section className="cyber-panel rounded-2xl p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <div className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Active Surface</div>
-                  <h2 className="mt-1 text-xl font-black text-white">{showPractice ? 'Trainer Console' : showUpload ? 'Upload Console' : 'Idle Console'}</h2>
+                  <div className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Aktive Ansicht</div>
+                  <h2 className="mt-1 text-xl font-black text-white">{showPractice ? 'Lernziel-Test' : showUpload ? 'Dokumente hochladen' : 'Bereit zur Auswahl'}</h2>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-bold">
-                  <span className={`rounded-full border px-3 py-1 ${showUpload ? 'border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent-dark)]' : 'border-[var(--border)] bg-[var(--input-bg)] text-[var(--text-muted)]'}`}>Upload</span>
-                  <span className={`rounded-full border px-3 py-1 ${showPractice ? 'border-[#ff2bd6] bg-[rgba(255,43,214,0.14)] text-[#ff7be5]' : 'border-[var(--border)] bg-[var(--input-bg)] text-[var(--text-muted)]'}`}>Trainer</span>
+                  <span className={`rounded-full border px-3 py-1 ${showUpload ? 'border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent-dark)]' : 'border-[var(--border)] bg-[var(--input-bg)] text-[var(--text-muted)]'}`}>Hochladen</span>
+                  <span className={`rounded-full border px-3 py-1 ${showPractice ? 'border-[#ff2bd6] bg-[rgba(255,43,214,0.14)] text-[#ff7be5]' : 'border-[var(--border)] bg-[var(--input-bg)] text-[var(--text-muted)]'}`}>Übungstest</span>
                 </div>
               </div>
             </section>
             {!showUpload && !showPractice && (
               <section className="cyber-panel rounded-2xl p-6 sm:p-8">
-                <div className="mx-auto max-w-2xl text-center">
-                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] text-[var(--accent-dark)] shadow-[0_0_30px_rgba(34,211,238,0.16)]">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M2 12h20"/><path d="m4.93 4.93 14.14 14.14"/><path d="m19.07 4.93-14.14 14.14"/></svg>
+                <div className="grid gap-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] text-[var(--accent-dark)] shadow-[0_0_30px_rgba(34,211,238,0.16)]">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M2 12h20"/><path d="m4.93 4.93 14.14 14.14"/><path d="m19.07 4.93-14.14 14.14"/></svg>
                   </div>
-                  <h3 className="text-2xl font-black text-white">No workflow armed</h3>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                    Use the switchboard on the left to open the worksheet converter or learning-objective trainer.
-                  </p>
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    <button type="button" onClick={() => setShowUpload(true)} className="cyber-primary rounded-xl border-none px-4 py-3 text-sm font-black text-white">
-                      Arm Upload
-                    </button>
-                    <button type="button" onClick={() => setShowPractice(true)} className="rounded-xl border border-[#ff2bd6] bg-[rgba(255,43,214,0.14)] px-4 py-3 text-sm font-black text-[#ff7be5]">
-                      Arm Trainer
-                    </button>
+                  <div>
+                    <h3 className="text-2xl font-black text-white">Wähle einen Arbeitsmodus</h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
+                      Starte oben mit dem Hochladen eines Dokuments oder generiere direkt einen Übungstest aus Lernzielen.
+                    </p>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <button type="button" onClick={() => setShowUpload(true)} className="cyber-primary rounded-xl border-none px-4 py-3 text-sm font-black text-white">
+                        Dokument hochladen
+                      </button>
+                      <button type="button" onClick={() => setShowPractice(true)} className="rounded-xl border border-[#ff2bd6] bg-[rgba(255,43,214,0.14)] px-4 py-3 text-sm font-black text-[#ff7be5]">
+                        Übungstest erstellen
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -478,7 +488,7 @@ export default function HomePage() {
                     <div className="mb-5 grid gap-4 lg:grid-cols-3">
                       <div className="cyber-card rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
-                      Struktur-Modell (Pass 1)
+                      Strukturmodell (Durchlauf 1)
                     </label>
                     <select
                       value={selectedStructureModel}
@@ -503,7 +513,7 @@ export default function HomePage() {
                   </div>
                       <div className="cyber-card rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
-                      Anreicherungs-Modell (Pass 2)
+                      Anreicherungsmodell (Durchlauf 2)
                     </label>
                     <select
                       value={selectedEnrichmentModel}
@@ -528,7 +538,7 @@ export default function HomePage() {
                   </div>
                       <div className="cyber-card rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-3">
                     <label className="block text-sm font-medium text-[var(--text)] mb-1.5">
-                      Review-Modell (Pass 3)
+                      Prüfmodell (Durchlauf 3)
                     </label>
                     <select
                       value={selectedReviewerModel}
@@ -689,7 +699,7 @@ export default function HomePage() {
                         </div>
                         {practiceChecked && (
                           <div className="rounded-xl bg-[var(--accent-light)] px-3 py-2 text-sm font-bold text-[var(--accent-dark)]">
-                            Score: {practiceScore}/{practiceTest.questions.length}
+                            Ergebnis: {practiceScore}/{practiceTest.questions.length}
                           </div>
                         )}
                       </div>
@@ -754,8 +764,8 @@ export default function HomePage() {
             )}
           </main>
 
-          <aside className="order-3 min-w-0 space-y-5 xl:sticky xl:top-8 xl:self-start">
-            {/* Recent documents */}
+          <aside className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            {/* Zuletzt verwendete Dokumente */}
             <section className="cyber-panel rounded-2xl overflow-hidden">
               <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[rgba(6,12,27,0.72)]">
                 <div>
@@ -766,7 +776,7 @@ export default function HomePage() {
           </div>
           {recentDocs.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                  Noch keine Dokumente. Lade im Workspace dein erstes Arbeitsblatt hoch.
+                  Noch keine Dokumente. Lade hier dein erstes Arbeitsblatt hoch.
             </div>
           ) : (
             <div className="divide-y divide-[var(--border)]">
@@ -792,7 +802,7 @@ export default function HomePage() {
         </section>
 
             <Link href="/compendium" className="cyber-primary block rounded-2xl p-5 text-white no-underline">
-              <div className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/70">Knowledge Base</div>
+              <div className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/70">Wissensbasis</div>
               <div className="mt-2 text-lg font-black">Kompendium</div>
               <p className="mt-2 text-sm text-white/80">Alle extrahierten Themen und Erklärungen an einem Ort.</p>
               <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold">
@@ -802,7 +812,7 @@ export default function HomePage() {
             </Link>
 
           </aside>
-        </div>
+        </section>
       </div>
     </div>
   );
