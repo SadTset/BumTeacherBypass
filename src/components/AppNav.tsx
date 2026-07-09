@@ -104,7 +104,7 @@ function LibraryTree({ pathname }: { pathname: string }) {
             <div className="flex items-center">
               <a href={yHref} className={`flex-1 ${rowCls(yActive, 'px-3')}`}>
                 <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[0.7rem] font-bold ${yActive ? 'bg-[var(--accent)] text-[#041018] shadow-[0_0_14px_rgba(34,211,238,0.5)]' : 'bg-white/10 text-[#8aa8bd]'}`}>{y}</span>
-                {y}. Lehrjahr
+                Lehrjahr
               </a>
               {hasChildren && (
                 <button
