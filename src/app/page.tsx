@@ -306,8 +306,8 @@ export default function HomePage() {
   const processingCount = recentDocs.filter(doc => doc.status === 'processing').length;
 
   return (
-    <div className="cyber-stage min-h-screen px-4 py-5 sm:px-6 lg:px-8 lg:py-8 text-[var(--text)]">
-      <div className="mx-auto max-w-7xl">
+    <div className="cyber-stage min-h-screen overflow-x-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-8 text-[var(--text)]">
+      <div className="mx-auto max-w-7xl min-w-0">
         <header className="cyber-panel cyber-hero mb-6 overflow-hidden rounded-[2rem] text-white">
           <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
             <div>
@@ -322,37 +322,34 @@ export default function HomePage() {
                 Lade PDFs oder Word-Dateien hoch, lass sie strukturieren und arbeite direkt mit den generierten Aufgaben weiter.
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-[var(--border)] bg-black/20 p-2">
-              <div className="cyber-stat rounded-xl px-3 py-3">
+            <div className="grid min-w-0 grid-cols-3 gap-2 rounded-2xl border border-[var(--border)] bg-black/20 p-2">
+              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
                 <div className="text-2xl font-extrabold text-[var(--accent-dark)]">{recentDocs.length}</div>
-                <div className="text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">zuletzt</div>
+                <div className="truncate text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">zuletzt</div>
               </div>
-              <div className="cyber-stat rounded-xl px-3 py-3">
+              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
                 <div className="text-2xl font-extrabold text-[var(--success)]">{readyCount}</div>
-                <div className="text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">bereit</div>
+                <div className="truncate text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">bereit</div>
               </div>
-              <div className="cyber-stat rounded-xl px-3 py-3">
+              <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
                 <div className="text-2xl font-extrabold text-[#ff7be5]">{processingCount}</div>
-                <div className="text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">aktiv</div>
+                <div className="truncate text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#a9c7d8]">aktiv</div>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)]">
-          <div className="space-y-5">
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[280px_minmax(0,1fr)_340px] xl:items-start">
+          <aside className="min-w-0 space-y-5 xl:sticky xl:top-8 xl:self-start">
             <section className="cyber-panel rounded-2xl p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-white">Bibliothek</h2>
                   <p className="text-sm text-[var(--text-muted)]">Spring direkt in ein Lehrjahr.</p>
                 </div>
-                <Link href="/compendium" className="cyber-card inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-dark)] no-underline">
-                  Kompendium
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </Link>
+                <span className="rounded-full border border-[var(--border)] bg-[var(--input-bg)] px-3 py-1 text-xs font-semibold text-[var(--accent-dark)]">4 Jahre</span>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-1">
                 {[1, 2, 3, 4].map(y => (
                   <Link key={y} href={`/worksheets/year-${y}`} className="cyber-card group rounded-xl border border-[var(--border)] bg-[var(--input-bg)] p-4 no-underline text-[var(--text)]">
                     <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-light)] text-lg font-black text-[var(--accent-dark)] shadow-[0_0_18px_rgba(34,211,238,0.18)]">{y}</span>
@@ -365,6 +362,27 @@ export default function HomePage() {
                 ))}
               </div>
             </section>
+
+            <Link href="/compendium" className="cyber-primary group relative block overflow-hidden rounded-2xl p-5 no-underline text-white">
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-black/25" />
+              <div className="relative">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.15] shadow-[0_0_24px_rgba(255,255,255,0.12)]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  Kompendium
+                </div>
+                <p className="text-sm text-white/85 m-0">Dein automatisch wachsendes Nachschlagewerk zu allen Themen.</p>
+                <span className="inline-flex items-center gap-1 text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
+                  Öffnen
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </span>
+              </div>
+            </Link>
+          </aside>
+
+          <main className="min-w-0 space-y-5">
 
       {!showUpload && (
         <button
@@ -751,10 +769,38 @@ export default function HomePage() {
                 )}
               </section>
             )}
-          </div>
+          </main>
 
-          <aside className="space-y-5">
-        {/* Recent documents */}
+          <aside className="min-w-0 space-y-5 xl:sticky xl:top-8 xl:self-start">
+            <section className="cyber-panel rounded-2xl p-4 sm:p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-white">Status</h2>
+                  <p className="text-sm text-[var(--text-muted)]">Aktuelle Verarbeitung</p>
+                </div>
+                <span className="cyber-hot-dot h-2.5 w-2.5 rounded-full" />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
+                  <div className="text-xl font-extrabold text-[var(--accent-dark)]">{recentDocs.length}</div>
+                  <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Docs</div>
+                </div>
+                <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
+                  <div className="text-xl font-extrabold text-[var(--success)]">{readyCount}</div>
+                  <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Fertig</div>
+                </div>
+                <div className="cyber-stat min-w-0 rounded-xl px-3 py-3">
+                  <div className="text-xl font-extrabold text-[#ff7be5]">{processingCount}</div>
+                  <div className="truncate text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#a9c7d8]">Aktiv</div>
+                </div>
+              </div>
+              <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-3">
+                <div className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">KI-Provider</div>
+                <div className="mt-1 text-sm font-semibold text-[var(--text)]">{providers.length > 0 ? `${providers.length} aktiv` : 'Nicht konfiguriert'}</div>
+              </div>
+            </section>
+
+            {/* Recent documents */}
             <section className="cyber-panel rounded-2xl overflow-hidden">
               <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[rgba(6,12,27,0.72)]">
                 <div>
@@ -765,7 +811,7 @@ export default function HomePage() {
           </div>
           {recentDocs.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-                  Noch keine Dokumente. Lade links dein erstes Arbeitsblatt hoch.
+                  Noch keine Dokumente. Lade im Workspace dein erstes Arbeitsblatt hoch.
             </div>
           ) : (
             <div className="divide-y divide-[var(--border)]">
@@ -790,24 +836,6 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Right rail */}
-            <Link href="/compendium" className="cyber-primary group relative block overflow-hidden rounded-2xl p-5 no-underline text-white">
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-black/25" />
-              <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.15] shadow-[0_0_24px_rgba(255,255,255,0.12)]">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                </div>
-                <div className="flex items-center gap-2 font-bold mb-1">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                Kompendium
-              </div>
-              <p className="text-sm text-white/85 m-0">Dein automatisch wachsendes Nachschlagewerk zu allen Themen.</p>
-              <span className="inline-flex items-center gap-1 text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
-                Öffnen
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-              </span>
-            </div>
-          </Link>
           </aside>
         </div>
       </div>
